@@ -1,0 +1,230 @@
+{{define "content"}}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-tachometer-alt"></i> 仪表板
+            </h1>
+        </div>
+    </div>
+    
+    <!-- 统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                短剧总数
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{.Stats.TotalDramas}}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-film fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                剧集总数
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{.Stats.TotalEpisodes}}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                用户总数
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{.Stats.TotalUsers}}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                今日观看
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{.Stats.TodayViews}}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-eye fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- 最新短剧 -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-film"></i> 最新短剧
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {{if .RecentDramas}}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>标题</th>
+                                    <th>类型</th>
+                                    <th>状态</th>
+                                    <th>创建时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range .RecentDramas}}
+                                <tr>
+                                    <td>
+                                        <a href="/admin/dramas/{{.ID}}" class="text-decoration-none">
+                                            {{.Title}}
+                                        </a>
+                                    </td>
+                                    <td><span class="badge bg-secondary">{{.Genre}}</span></td>
+                                    <td>
+                                        {{if eq .Status "active"}}
+                                            <span class="badge bg-success">激活</span>
+                                        {{else if eq .Status "inactive"}}
+                                            <span class="badge bg-danger">禁用</span>
+                                        {{else}}
+                                            <span class="badge bg-warning">草稿</span>
+                                        {{end}}
+                                    </td>
+                                    <td>{{.CreatedAt.Format "01-02 15:04"}}</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{else}}
+                    <p class="text-muted text-center">暂无短剧数据</p>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+        
+        <!-- 最新用户 -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-users"></i> 最新用户
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {{if .RecentUsers}}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>用户名</th>
+                                    <th>邮箱</th>
+                                    <th>状态</th>
+                                    <th>注册时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range .RecentUsers}}
+                                <tr>
+                                    <td>{{.Username}}</td>
+                                    <td>{{.Email}}</td>
+                                    <td>
+                                        {{if .IsActive}}
+                                            <span class="badge bg-success">激活</span>
+                                        {{else}}
+                                            <span class="badge bg-danger">禁用</span>
+                                        {{end}}
+                                    </td>
+                                    <td>{{.CreatedAt.Format "01-02 15:04"}}</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{else}}
+                    <p class="text-muted text-center">暂无用户数据</p>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.text-primary {
+    color: #4e73df !important;
+}
+
+.text-success {
+    color: #1cc88a !important;
+}
+
+.text-info {
+    color: #36b9cc !important;
+}
+
+.text-warning {
+    color: #f6c23e !important;
+}
+
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+.text-xs {
+    font-size: 0.7rem;
+}
+</style>
+{{end}}

@@ -1,0 +1,506 @@
+{{define "content"}}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3">
+                    <i class="fas fa-list"></i> 剧集管理
+                    {{if .Drama}}
+                    <small class="text-muted">- {{.Drama.Title}}</small>
+                    {{end}}
+                </h1>
+                <div>
+                    {{if .Drama}}
+                    <a href="/admin/dramas" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left"></i> 返回短剧列表
+                    </a>
+                    {{end}}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createEpisodeModal">
+                        <i class="fas fa-plus"></i> 添加剧集
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 短剧选择器（如果没有指定短剧） -->
+    {{if not .Drama}}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-6">
+                            <select class="form-select" name="drama_id" onchange="this.form.submit()">
+                                <option value="">请选择短剧</option>
+                                {{range .AllDramas}}
+                                <option value="{{.ID}}" {{if eq .ID $.SelectedDramaID}}selected{{end}}>{{.Title}}</option>
+                                {{end}}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="search" placeholder="搜索剧集标题..." value="{{.SearchQuery}}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{end}}
+    
+    <!-- 剧集列表 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {{if .Episodes.Episodes}}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>缩略图</th>
+                                    <th>集数</th>
+                                    <th>标题</th>
+                                    <th>时长</th>
+                                    <th>状态</th>
+                                    <th>观看次数</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range .Episodes.Episodes}}
+                                <tr>
+                                    <td>
+                                        {{if .Thumbnail}}
+                                            <img src="{{.Thumbnail}}" alt="缩略图" class="img-thumbnail" style="width: 80px; height: 45px; object-fit: cover;">
+                                        {{else}}
+                                            <div class="bg-light d-flex align-items-center justify-content-center" style="width: 80px; height: 45px;">
+                                                <i class="fas fa-play text-muted"></i>
+                                            </div>
+                                        {{end}}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">第{{.EpisodeNum}}集</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{.Title}}</strong>
+                                        {{if .VideoURL}}
+                                        <br><small class="text-success"><i class="fas fa-check-circle"></i> 已上传视频</small>
+                                        {{else}}
+                                        <br><small class="text-warning"><i class="fas fa-exclamation-triangle"></i> 未上传视频</small>
+                                        {{end}}
+                                    </td>
+                                    <td>{{formatDuration .Duration}}</td>
+                                    <td>
+                                        {{if eq .Status "active"}}
+                                            <span class="badge bg-success">激活</span>
+                                        {{else if eq .Status "inactive"}}
+                                            <span class="badge bg-danger">禁用</span>
+                                        {{else}}
+                                            <span class="badge bg-warning">草稿</span>
+                                        {{end}}
+                                    </td>
+                                    <td>{{.ViewCount}}</td>
+                                    <td>{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="editEpisode({{.ID}})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            {{if .VideoURL}}
+                                            <a href="{{.VideoURL}}" target="_blank" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-play"></i>
+                                            </a>
+                                            {{else}}
+                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="uploadVideo({{.ID}})">
+                                                <i class="fas fa-upload"></i>
+                                            </button>
+                                            {{end}}
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteEpisode({{.ID}}, '{{.Title}}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    {{if gt .Episodes.TotalPages 1}}
+                    <nav aria-label="分页导航">
+                        <ul class="pagination justify-content-center">
+                            {{if .Episodes.HasPrevious}}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{sub .Episodes.Page 1}}&drama_id={{.SelectedDramaID}}&search={{.SearchQuery}}">上一页</a>
+                            </li>
+                            {{end}}
+                            
+                            {{range $i := .PageNumbers}}
+                            <li class="page-item {{if eq $i $.Episodes.Page}}active{{end}}">
+                                <a class="page-link" href="?page={{$i}}&drama_id={{$.SelectedDramaID}}&search={{$.SearchQuery}}">{{$i}}</a>
+                            </li>
+                            {{end}}
+                            
+                            {{if .Episodes.HasNext}}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{add .Episodes.Page 1}}&drama_id={{.SelectedDramaID}}&search={{.SearchQuery}}">下一页</a>
+                            </li>
+                            {{end}}
+                        </ul>
+                    </nav>
+                    {{end}}
+                    {{else}}
+                    <div class="text-center py-5">
+                        <i class="fas fa-list fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">暂无剧集数据</h5>
+                        {{if .Drama}}
+                        <p class="text-muted">点击上方"添加剧集"按钮为此短剧创建剧集</p>
+                        {{else}}
+                        <p class="text-muted">请先选择一个短剧</p>
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 创建剧集模态框 -->
+<div class="modal fade" id="createEpisodeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus"></i> 添加剧集
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createEpisodeForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            {{if not .Drama}}
+                            <div class="mb-3">
+                                <label class="form-label">所属短剧 *</label>
+                                <select class="form-select" name="drama_id" required>
+                                    <option value="">请选择短剧</option>
+                                    {{range .AllDramas}}
+                                    <option value="{{.ID}}" {{if eq .ID $.SelectedDramaID}}selected{{end}}>{{.Title}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            {{else}}
+                            <input type="hidden" name="drama_id" value="{{.Drama.ID}}">
+                            {{end}}
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">集数 *</label>
+                                        <input type="number" class="form-control" name="episode_num" min="1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">时长（分钟） *</label>
+                                        <input type="number" class="form-control" name="duration" min="1" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">标题 *</label>
+                                <input type="text" class="form-control" name="title" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">状态</label>
+                                <select class="form-select" name="status">
+                                    <option value="draft">草稿</option>
+                                    <option value="active">激活</option>
+                                    <option value="inactive">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">缩略图</label>
+                                <div class="thumbnail-upload-area" id="thumbnailUploadArea">
+                                    <div class="upload-placeholder">
+                                        <i class="fas fa-image fa-2x text-muted"></i>
+                                        <p class="text-muted mt-2">点击上传缩略图</p>
+                                    </div>
+                                    <input type="file" id="thumbnailInput" accept="image/*" style="display: none;">
+                                    <input type="hidden" name="thumbnail" id="thumbnailUrl">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">视频文件</label>
+                                <div class="video-upload-area" id="videoUploadArea">
+                                    <div class="upload-placeholder">
+                                        <i class="fas fa-video fa-2x text-muted"></i>
+                                        <p class="text-muted mt-2">点击上传视频</p>
+                                    </div>
+                                    <input type="file" id="videoInput" accept="video/*" style="display: none;">
+                                    <input type="hidden" name="video_url" id="videoUrl">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 视频上传模态框 -->
+<div class="modal fade" id="videoUploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload"></i> 上传视频
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="video-upload-area" id="singleVideoUploadArea">
+                    <div class="upload-placeholder">
+                        <i class="fas fa-video fa-3x text-muted"></i>
+                        <p class="text-muted mt-3">点击选择视频文件</p>
+                        <small class="text-muted">支持 MP4, AVI, MOV 格式</small>
+                    </div>
+                    <input type="file" id="singleVideoInput" accept="video/*" style="display: none;">
+                </div>
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <p class="text-center mt-2">上传中...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmVideoUpload" style="display: none;">
+                    <i class="fas fa-check"></i> 确认上传
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.thumbnail-upload-area,
+.video-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.thumbnail-upload-area:hover,
+.video-upload-area:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.thumbnail-upload-area.has-file,
+.video-upload-area.has-file {
+    border-color: #28a745;
+    background-color: #d4edda;
+}
+
+.thumbnail-preview {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+</style>
+{{end}}
+
+{{define "scripts"}}
+<script>
+// 格式化时长
+function formatDuration(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+        return hours + '小时' + mins + '分钟';
+    }
+    return mins + '分钟';
+}
+
+// 文件上传处理
+$(document).ready(function() {
+    // 缩略图上传
+    $('#thumbnailUploadArea').on('click', function() {
+        $('#thumbnailInput').click();
+    });
+    
+    $('#thumbnailInput').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            uploadFile(file, 'thumbnail', '#thumbnailUrl', '#thumbnailUploadArea');
+        }
+    });
+    
+    // 视频上传
+    $('#videoUploadArea').on('click', function() {
+        $('#videoInput').click();
+    });
+    
+    $('#videoInput').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            uploadFile(file, 'video', '#videoUrl', '#videoUploadArea');
+        }
+    });
+    
+    // 单独视频上传
+    $('#singleVideoUploadArea').on('click', function() {
+        $('#singleVideoInput').click();
+    });
+    
+    $('#singleVideoInput').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            $(this).closest('.modal-body').find('.upload-placeholder').hide();
+            $('#confirmVideoUpload').show();
+        }
+    });
+});
+
+function uploadFile(file, type, urlInput, uploadArea) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    
+    $(uploadArea).addClass('has-file').html(
+        '<div class="upload-placeholder"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><p class="text-primary mt-2">上传中...</p></div>'
+    );
+    
+    $.ajax({
+        url: '/api/upload',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+        },
+        success: function(response) {
+            if (response.success) {
+                $(urlInput).val(response.data.url);
+                if (type === 'thumbnail') {
+                    $(uploadArea).html('<img src="' + response.data.url + '" class="thumbnail-preview" alt="缩略图预览">');
+                } else {
+                    $(uploadArea).html('<div class="upload-placeholder"><i class="fas fa-check-circle fa-2x text-success"></i><p class="text-success mt-2">视频上传成功</p></div>');
+                }
+            } else {
+                alert('上传失败：' + response.message);
+                $(uploadArea).removeClass('has-file').html('<div class="upload-placeholder"><i class="fas fa-' + (type === 'thumbnail' ? 'image' : 'video') + ' fa-2x text-muted"></i><p class="text-muted mt-2">点击上传' + (type === 'thumbnail' ? '缩略图' : '视频') + '</p></div>');
+            }
+        },
+        error: function() {
+            alert('上传失败，请重试');
+            $(uploadArea).removeClass('has-file').html('<div class="upload-placeholder"><i class="fas fa-' + (type === 'thumbnail' ? 'image' : 'video') + ' fa-2x text-muted"></i><p class="text-muted mt-2">点击上传' + (type === 'thumbnail' ? '缩略图' : '视频') + '</p></div>');
+        }
+    });
+}
+
+// 创建剧集
+$('#createEpisodeForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+    
+    // 转换数字类型
+    data.drama_id = parseInt(data.drama_id);
+    data.episode_num = parseInt(data.episode_num);
+    data.duration = parseInt(data.duration);
+    
+    $.ajax({
+        url: '/api/admin/episodes',
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+        },
+        success: function(response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert('创建失败：' + response.message);
+            }
+        },
+        error: function() {
+            alert('创建失败，请重试');
+        }
+    });
+});
+
+// 编辑剧集
+function editEpisode(id) {
+    // 实现编辑功能
+    alert('编辑功能待实现');
+}
+
+// 上传视频
+function uploadVideo(id) {
+    $('#videoUploadModal').data('episode-id', id).modal('show');
+}
+
+// 删除剧集
+function deleteEpisode(id, title) {
+    if (confirm('确定要删除剧集"' + title + '"吗？此操作不可恢复。')) {
+        $.ajax({
+            url: '/api/admin/episodes/' + id,
+            type: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('删除失败：' + response.message);
+                }
+            },
+            error: function() {
+                alert('删除失败，请重试');
+            }
+        });
+    }
+}
+</script>
+{{end}}

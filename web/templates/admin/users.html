@@ -1,0 +1,374 @@
+{{define "content"}}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3">
+                    <i class="fas fa-users"></i> 用户管理
+                </h1>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 搜索和筛选 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="search" placeholder="搜索用户名或邮箱..." value="{{.SearchQuery}}">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="status">
+                                <option value="">所有状态</option>
+                                <option value="active" {{if eq .StatusFilter "active"}}selected{{end}}>激活</option>
+                                <option value="inactive" {{if eq .StatusFilter "inactive"}}selected{{end}}>禁用</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="sort">
+                                <option value="created_desc" {{if eq .SortBy "created_desc"}}selected{{end}}>注册时间（新到旧）</option>
+                                <option value="created_asc" {{if eq .SortBy "created_asc"}}selected{{end}}>注册时间（旧到新）</option>
+                                <option value="username_asc" {{if eq .SortBy "username_asc"}}selected{{end}}>用户名（A-Z）</option>
+                                <option value="username_desc" {{if eq .SortBy "username_desc"}}selected{{end}}>用户名（Z-A）</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 用户列表 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {{if .Users.Users}}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>头像</th>
+                                    <th>用户名</th>
+                                    <th>邮箱</th>
+                                    <th>手机号</th>
+                                    <th>状态</th>
+                                    <th>注册时间</th>
+                                    <th>最后登录</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range .Users.Users}}
+                                <tr>
+                                    <td>
+                                        {{if .Avatar}}
+                                            <img src="{{.Avatar}}" alt="头像" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                        {{else}}
+                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                {{substr .Username 0 1 | upper}}
+                                            </div>
+                                        {{end}}
+                                    </td>
+                                    <td>
+                                        <strong>{{.Username}}</strong>
+                                        <br><small class="text-muted">ID: {{.ID}}</small>
+                                    </td>
+                                    <td>{{.Email}}</td>
+                                    <td>
+                                        {{if .Phone}}
+                                            {{.Phone}}
+                                        {{else}}
+                                            <span class="text-muted">未设置</span>
+                                        {{end}}
+                                    </td>
+                                    <td>
+                                        {{if .IsActive}}
+                                            <span class="badge bg-success">激活</span>
+                                        {{else}}
+                                            <span class="badge bg-danger">禁用</span>
+                                        {{end}}
+                                    </td>
+                                    <td>{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                                    <td>
+                                        {{if .LastLoginAt}}
+                                            {{.LastLoginAt.Format "2006-01-02 15:04"}}
+                                        {{else}}
+                                            <span class="text-muted">从未登录</span>
+                                        {{end}}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="viewUser({{.ID}})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            {{if .IsActive}}
+                                                <button type="button" class="btn btn-sm btn-outline-warning" onclick="deactivateUser({{.ID}}, '{{.Username}}')">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            {{else}}
+                                                <button type="button" class="btn btn-sm btn-outline-success" onclick="activateUser({{.ID}}, '{{.Username}}')">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            {{end}}
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteUser({{.ID}}, '{{.Username}}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    {{if gt .Users.TotalPages 1}}
+                    <nav aria-label="分页导航">
+                        <ul class="pagination justify-content-center">
+                            {{if .Users.HasPrevious}}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{sub .Users.Page 1}}&search={{.SearchQuery}}&status={{.StatusFilter}}&sort={{.SortBy}}">上一页</a>
+                            </li>
+                            {{end}}
+                            
+                            {{range $i := .PageNumbers}}
+                            <li class="page-item {{if eq $i $.Users.Page}}active{{end}}">
+                                <a class="page-link" href="?page={{$i}}&search={{$.SearchQuery}}&status={{$.StatusFilter}}&sort={{$.SortBy}}">{{$i}}</a>
+                            </li>
+                            {{end}}
+                            
+                            {{if .Users.HasNext}}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{add .Users.Page 1}}&search={{.SearchQuery}}&status={{.StatusFilter}}&sort={{.SortBy}}">下一页</a>
+                            </li>
+                            {{end}}
+                        </ul>
+                    </nav>
+                    {{end}}
+                    {{else}}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">暂无用户数据</h5>
+                        <p class="text-muted">还没有用户注册</p>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 用户详情模态框 -->
+<div class="modal fade" id="userDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user"></i> 用户详情
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="userDetailContent">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                        <p class="text-muted mt-2">加载中...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 批量操作工具栏 -->
+<div class="fixed-bottom bg-white border-top p-3" id="batchToolbar" style="display: none;">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <span class="text-muted">已选择 <span id="selectedCount">0</span> 个用户</span>
+            </div>
+            <div class="col-md-6 text-end">
+                <button type="button" class="btn btn-outline-success me-2" onclick="batchActivate()">
+                    <i class="fas fa-check"></i> 批量激活
+                </button>
+                <button type="button" class="btn btn-outline-warning me-2" onclick="batchDeactivate()">
+                    <i class="fas fa-ban"></i> 批量禁用
+                </button>
+                <button type="button" class="btn btn-outline-danger" onclick="batchDelete()">
+                    <i class="fas fa-trash"></i> 批量删除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+// 查看用户详情
+function viewUser(id) {
+    $('#userDetailModal').modal('show');
+    
+    $.ajax({
+        url: '/api/admin/users/' + id,
+        type: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+        },
+        success: function(response) {
+            if (response.success) {
+                const user = response.data;
+                const content = `
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            ${user.avatar ? 
+                                '<img src="' + user.avatar + '" alt="头像" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">' :
+                                '<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 48px;">' + user.username.charAt(0).toUpperCase() + '</div>'
+                            }
+                            <h5>${user.username}</h5>
+                            <p class="text-muted">ID: ${user.id}</p>
+                        </div>
+                        <div class="col-md-8">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="30%">邮箱:</th>
+                                    <td>${user.email}</td>
+                                </tr>
+                                <tr>
+                                    <th>手机号:</th>
+                                    <td>${user.phone || '未设置'}</td>
+                                </tr>
+                                <tr>
+                                    <th>状态:</th>
+                                    <td>
+                                        ${user.is_active ? 
+                                            '<span class="badge bg-success">激活</span>' : 
+                                            '<span class="badge bg-danger">禁用</span>'
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>注册时间:</th>
+                                    <td>${new Date(user.created_at).toLocaleString()}</td>
+                                </tr>
+                                <tr>
+                                    <th>最后更新:</th>
+                                    <td>${new Date(user.updated_at).toLocaleString()}</td>
+                                </tr>
+                                <tr>
+                                    <th>最后登录:</th>
+                                    <td>${user.last_login_at ? new Date(user.last_login_at).toLocaleString() : '从未登录'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                $('#userDetailContent').html(content);
+            } else {
+                $('#userDetailContent').html('<div class="alert alert-danger">加载用户详情失败</div>');
+            }
+        },
+        error: function() {
+            $('#userDetailContent').html('<div class="alert alert-danger">加载用户详情失败</div>');
+        }
+    });
+}
+
+// 激活用户
+function activateUser(id, username) {
+    if (confirm('确定要激活用户"' + username + '"吗？')) {
+        $.ajax({
+            url: '/api/admin/users/' + id + '/activate',
+            type: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('激活失败：' + response.message);
+                }
+            },
+            error: function() {
+                alert('激活失败，请重试');
+            }
+        });
+    }
+}
+
+// 禁用用户
+function deactivateUser(id, username) {
+    if (confirm('确定要禁用用户"' + username + '"吗？')) {
+        $.ajax({
+            url: '/api/admin/users/' + id + '/deactivate',
+            type: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('禁用失败：' + response.message);
+                }
+            },
+            error: function() {
+                alert('禁用失败，请重试');
+            }
+        });
+    }
+}
+
+// 删除用户
+function deleteUser(id, username) {
+    if (confirm('确定要删除用户"' + username + '"吗？此操作不可恢复。')) {
+        $.ajax({
+            url: '/api/admin/users/' + id,
+            type: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('删除失败：' + response.message);
+                }
+            },
+            error: function() {
+                alert('删除失败，请重试');
+            }
+        });
+    }
+}
+
+// 工具函数
+function substr(str, start, length) {
+    return str.substring(start, start + length);
+}
+
+function upper(str) {
+    return str.toUpperCase();
+}
+
+function sub(a, b) {
+    return a - b;
+}
+
+function add(a, b) {
+    return a + b;
+}
+</script>
+{{end}}

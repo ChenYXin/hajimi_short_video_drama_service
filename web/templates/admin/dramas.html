@@ -1,0 +1,439 @@
+{{define "content"}}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3">
+                    <i class="fas fa-film"></i> 短剧管理
+                </h1>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDramaModal">
+                    <i class="fas fa-plus"></i> 添加短剧
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 搜索和筛选 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="search" placeholder="搜索短剧标题..." value="{{.SearchQuery}}">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="genre">
+                                <option value="">所有类型</option>
+                                <option value="喜剧" {{if eq .GenreFilter "喜剧"}}selected{{end}}>喜剧</option>
+                                <option value="爱情" {{if eq .GenreFilter "爱情"}}selected{{end}}>爱情</option>
+                                <option value="悬疑" {{if eq .GenreFilter "悬疑"}}selected{{end}}>悬疑</option>
+                                <option value="动作" {{if eq .GenreFilter "动作"}}selected{{end}}>动作</option>
+                                <option value="科幻" {{if eq .GenreFilter "科幻"}}selected{{end}}>科幻</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="status">
+                                <option value="">所有状态</option>
+                                <option value="active" {{if eq .StatusFilter "active"}}selected{{end}}>激活</option>
+                                <option value="inactive" {{if eq .StatusFilter "inactive"}}selected{{end}}>禁用</option>
+                                <option value="draft" {{if eq .StatusFilter "draft"}}selected{{end}}>草稿</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 短剧列表 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {{if .Dramas.Dramas}}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>封面</th>
+                                    <th>标题</th>
+                                    <th>类型</th>
+                                    <th>导演</th>
+                                    <th>状态</th>
+                                    <th>观看次数</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range .Dramas.Dramas}}
+                                <tr>
+                                    <td>
+                                        {{if .CoverImage}}
+                                            <img src="{{.CoverImage}}" alt="封面" class="img-thumbnail" style="width: 60px; height: 40px; object-fit: cover;">
+                                        {{else}}
+                                            <div class="bg-light d-flex align-items-center justify-content-center" style="width: 60px; height: 40px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        {{end}}
+                                    </td>
+                                    <td>
+                                        <strong>{{.Title}}</strong>
+                                        {{if .Description}}
+                                        <br><small class="text-muted">{{substr .Description 0 50}}{{if gt (len .Description) 50}}...{{end}}</small>
+                                        {{end}}
+                                    </td>
+                                    <td><span class="badge bg-secondary">{{.Genre}}</span></td>
+                                    <td>{{.Director}}</td>
+                                    <td>
+                                        {{if eq .Status "active"}}
+                                            <span class="badge bg-success">激活</span>
+                                        {{else if eq .Status "inactive"}}
+                                            <span class="badge bg-danger">禁用</span>
+                                        {{else}}
+                                            <span class="badge bg-warning">草稿</span>
+                                        {{end}}
+                                    </td>
+                                    <td>{{.ViewCount}}</td>
+                                    <td>{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="editDrama({{.ID}})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <a href="/admin/dramas/{{.ID}}/episodes" class="btn btn-sm btn-outline-info">
+                                                <i class="fas fa-list"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteDrama({{.ID}}, '{{.Title}}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    {{if gt .Dramas.TotalPages 1}}
+                    <nav aria-label="分页导航">
+                        <ul class="pagination justify-content-center">
+                            {{if .Dramas.HasPrevious}}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{sub .Dramas.Page 1}}&search={{.SearchQuery}}&genre={{.GenreFilter}}&status={{.StatusFilter}}">上一页</a>
+                            </li>
+                            {{end}}
+                            
+                            {{range $i := .PageNumbers}}
+                            <li class="page-item {{if eq $i $.Dramas.Page}}active{{end}}">
+                                <a class="page-link" href="?page={{$i}}&search={{$.SearchQuery}}&genre={{$.GenreFilter}}&status={{$.StatusFilter}}">{{$i}}</a>
+                            </li>
+                            {{end}}
+                            
+                            {{if .Dramas.HasNext}}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{add .Dramas.Page 1}}&search={{.SearchQuery}}&genre={{.GenreFilter}}&status={{.StatusFilter}}">下一页</a>
+                            </li>
+                            {{end}}
+                        </ul>
+                    </nav>
+                    {{end}}
+                    {{else}}
+                    <div class="text-center py-5">
+                        <i class="fas fa-film fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">暂无短剧数据</h5>
+                        <p class="text-muted">点击上方"添加短剧"按钮创建第一个短剧</p>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 创建短剧模态框 -->
+<div class="modal fade" id="createDramaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus"></i> 添加短剧
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createDramaForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label">标题 *</label>
+                                <input type="text" class="form-control" name="title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">描述</label>
+                                <textarea class="form-control" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">类型 *</label>
+                                        <select class="form-select" name="genre" required>
+                                            <option value="">请选择类型</option>
+                                            <option value="喜剧">喜剧</option>
+                                            <option value="爱情">爱情</option>
+                                            <option value="悬疑">悬疑</option>
+                                            <option value="动作">动作</option>
+                                            <option value="科幻">科幻</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">状态</label>
+                                        <select class="form-select" name="status">
+                                            <option value="draft">草稿</option>
+                                            <option value="active">激活</option>
+                                            <option value="inactive">禁用</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">导演</label>
+                                        <input type="text" class="form-control" name="director">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">演员</label>
+                                        <input type="text" class="form-control" name="actors">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">封面图片</label>
+                                <div class="cover-upload-area" id="coverUploadArea">
+                                    <div class="upload-placeholder">
+                                        <i class="fas fa-cloud-upload-alt fa-2x text-muted"></i>
+                                        <p class="text-muted mt-2">点击上传封面</p>
+                                    </div>
+                                    <input type="file" id="coverInput" accept="image/*" style="display: none;">
+                                    <input type="hidden" name="cover_image" id="coverImageUrl">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑短剧模态框 -->
+<div class="modal fade" id="editDramaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> 编辑短剧
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editDramaForm">
+                <div class="modal-body">
+                    <!-- 编辑表单内容与创建表单类似 -->
+                    <div id="editDramaContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 更新
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.cover-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cover-upload-area:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.cover-upload-area.has-image {
+    padding: 0;
+}
+
+.cover-preview {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+</style>
+{{end}}
+
+{{define "scripts"}}
+<script>
+// 封面上传处理
+$(document).ready(function() {
+    $('#coverUploadArea').on('click', function() {
+        $('#coverInput').click();
+    });
+    
+    $('#coverInput').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            uploadCoverImage(file);
+        }
+    });
+});
+
+function uploadCoverImage(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'cover');
+    
+    $.ajax({
+        url: '/api/upload',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+        },
+        success: function(response) {
+            if (response.success) {
+                $('#coverImageUrl').val(response.data.url);
+                $('#coverUploadArea').addClass('has-image').html(
+                    '<img src="' + response.data.url + '" class="cover-preview" alt="封面预览">'
+                );
+            } else {
+                alert('上传失败：' + response.message);
+            }
+        },
+        error: function() {
+            alert('上传失败，请重试');
+        }
+    });
+}
+
+// 创建短剧
+$('#createDramaForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+    
+    $.ajax({
+        url: '/api/admin/dramas',
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+        },
+        success: function(response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert('创建失败：' + response.message);
+            }
+        },
+        error: function() {
+            alert('创建失败，请重试');
+        }
+    });
+});
+
+// 编辑短剧
+function editDrama(id) {
+    // 获取短剧详情并填充编辑表单
+    $.ajax({
+        url: '/api/admin/dramas/' + id,
+        type: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+        },
+        success: function(response) {
+            if (response.success) {
+                // 填充编辑表单
+                // 这里需要根据实际API响应结构来实现
+                $('#editDramaModal').modal('show');
+            }
+        }
+    });
+}
+
+// 删除短剧
+function deleteDrama(id, title) {
+    if (confirm('确定要删除短剧"' + title + '"吗？此操作不可恢复。')) {
+        $.ajax({
+            url: '/api/admin/dramas/' + id,
+            type: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('删除失败：' + response.message);
+                }
+            },
+            error: function() {
+                alert('删除失败，请重试');
+            }
+        });
+    }
+}
+
+// 模板函数
+function substr(str, start, length) {
+    return str.substring(start, start + length);
+}
+
+function sub(a, b) {
+    return a - b;
+}
+
+function add(a, b) {
+    return a + b;
+}
+</script>
+{{end}}

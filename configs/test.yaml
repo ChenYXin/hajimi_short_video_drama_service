@@ -1,0 +1,51 @@
+server:
+  host: "localhost"
+  port: 8080
+  mode: "test"
+
+database:
+  host: "localhost"
+  port: 3306
+  username: "test"
+  password: "test"
+  dbname: "gin_mysql_api_test"
+  charset: "utf8mb4"
+  parseTime: true
+  loc: "Local"
+  maxIdleConns: 5
+  maxOpenConns: 10
+  connMaxLifetime: 300
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 1
+  poolSize: 5
+
+jwt:
+  secret: "test-secret-key-for-testing"
+  expiration: 1
+
+upload:
+  maxSize: 10
+  allowedTypes:
+    - "jpg"
+    - "jpeg"
+    - "png"
+    - "gif"
+    - "mp4"
+    - "avi"
+    - "mov"
+  uploadPath: "./test_uploads"
+
+logging:
+  level: "debug"
+  format: "json"
+  output: "stdout"
+  filename: ""
+
+prometheus:
+  enabled: false
+  path: "/metrics"
+  port: 9090
