@@ -222,7 +222,7 @@ metrics: ## 查看Prometheus指标
 
 health: ## 检查应用健康状态
 	@echo "🏥 检查应用健康状态..."
-	@curl -f http://localhost:8080/health || echo "应用程序未运行"
+	@curl -f http://localhost:1800/health || echo "应用程序未运行"
 
 # 完整的CI/CD流程
 ci: deps fmt vet lint test build ## 运行CI流程
@@ -252,4 +252,4 @@ health-check: ## 健康检查
 	@echo "检查服务状态:"
 	@docker compose ps
 	@echo "检查应用健康:"
-	@curl -f http://localhost:8080/health > /dev/null 2>&1 && echo "✅ 应用运行正常" || echo "❌ 应用未响应"
+	@curl -f http://localhost:1800/health > /dev/null 2>&1 && echo "✅ 应用运行正常" || echo "❌ 应用未响应"

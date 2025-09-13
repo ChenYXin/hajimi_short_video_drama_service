@@ -147,7 +147,7 @@ server {
     server_name your-domain.com;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://localhost:1800;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -265,7 +265,7 @@ docker stats
 | 变量名 | 描述 | 默认值 |
 |--------|------|--------|
 | `APP_SERVER_HOST` | 服务器监听地址 | 0.0.0.0 |
-| `APP_SERVER_PORT` | 服务器端口 | 8080 |
+| `APP_SERVER_PORT` | 服务器端口 | 1800 |
 | `APP_DATABASE_HOST` | 数据库地址 | mysql |
 | `APP_DATABASE_PASSWORD` | 数据库密码 | rootpassword |
 | `APP_REDIS_HOST` | Redis 地址 | redis |
@@ -335,7 +335,7 @@ docker-compose logs app
 docker-compose config
 
 # 检查端口占用
-netstat -tlnp | grep :8080
+netstat -tlnp | grep :1800
 ```
 
 #### 2. 数据库连接失败

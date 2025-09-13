@@ -64,7 +64,7 @@ func main() {
 	userService := service.NewUserService(userRepo, jwtManager)
 	adminService := service.NewAdminService(adminRepo, dramaRepo, episodeRepo, jwtManager, cacheService)
 	dramaService := service.NewDramaService(dramaRepo, episodeRepo, cacheService)
-	fileService := service.NewFileService(cfg.Upload.UploadPath, "http://localhost:8080", int64(cfg.Upload.MaxSize*1024*1024), cfg.Upload.AllowedTypes)
+	fileService := service.NewFileService(cfg.Upload.UploadPath, "http://localhost:1800", int64(cfg.Upload.MaxSize*1024*1024), cfg.Upload.AllowedTypes)
 	authService := service.NewAuthService(userRepo, adminRepo, jwtManager)
 
 	// 初始化服务容器

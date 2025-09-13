@@ -34,7 +34,7 @@ func NewWebHandler(
 
 // LoginPage 显示登录页面
 func (h *WebHandler) LoginPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "auth/login.html", gin.H{
+	c.HTML(http.StatusOK, "login.html", gin.H{
 		"Title": "管理员登录",
 	})
 }
@@ -45,7 +45,7 @@ func (h *WebHandler) Login(c *gin.Context) {
 	password := c.PostForm("password")
 
 	if username == "" || password == "" {
-		c.HTML(http.StatusBadRequest, "auth/login.html", gin.H{
+		c.HTML(http.StatusBadRequest, "login.html", gin.H{
 			"Title":        "管理员登录",
 			"ErrorMessage": "用户名和密码不能为空",
 		})
@@ -60,7 +60,7 @@ func (h *WebHandler) Login(c *gin.Context) {
 
 	response, err := h.adminService.Login(loginReq)
 	if err != nil {
-		c.HTML(http.StatusUnauthorized, "auth/login.html", gin.H{
+		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
 			"Title":        "管理员登录",
 			"ErrorMessage": err.Error(),
 		})
@@ -91,7 +91,7 @@ func (h *WebHandler) Dashboard(c *gin.Context) {
 	// 获取最新用户
 	recentUsers, _ := h.userService.GetUserList(1, 5)
 
-	c.HTML(http.StatusOK, "admin/dashboard.html", gin.H{
+	c.HTML(http.StatusOK, "dashboard.html", gin.H{
 		"Title":        "仪表板",
 		"ActiveMenu":   "dashboard",
 		"AdminUser":    h.getAdminUser(c),
@@ -111,7 +111,7 @@ func (h *WebHandler) DramasPage(c *gin.Context) {
 
 	dramas, err := h.adminService.GetDramaList(page, pageSize)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "admin/dramas.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "dramas.html", gin.H{
 			"Title":        "短剧管理",
 			"ActiveMenu":   "dramas",
 			"AdminUser":    h.getAdminUser(c),
@@ -121,7 +121,7 @@ func (h *WebHandler) DramasPage(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "admin/dramas.html", gin.H{
+	c.HTML(http.StatusOK, "dramas.html", gin.H{
 		"Title":        "短剧管理",
 		"ActiveMenu":   "dramas",
 		"AdminUser":    h.getAdminUser(c),
@@ -155,7 +155,7 @@ func (h *WebHandler) EpisodesPage(c *gin.Context) {
 	// 获取所有短剧用于选择器
 	allDramas, _ := h.adminService.GetDramaList(1, 1000)
 
-	c.HTML(http.StatusOK, "admin/episodes.html", gin.H{
+	c.HTML(http.StatusOK, "episodes.html", gin.H{
 		"Title":           "剧集管理",
 		"ActiveMenu":      "episodes",
 		"AdminUser":       h.getAdminUser(c),
@@ -178,7 +178,7 @@ func (h *WebHandler) UsersPage(c *gin.Context) {
 
 	users, err := h.userService.GetUserList(page, pageSize)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "admin/users.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "users.html", gin.H{
 			"Title":        "用户管理",
 			"ActiveMenu":   "users",
 			"AdminUser":    h.getAdminUser(c),
@@ -188,7 +188,7 @@ func (h *WebHandler) UsersPage(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "admin/users.html", gin.H{
+	c.HTML(http.StatusOK, "users.html", gin.H{
 		"Title":        "用户管理",
 		"ActiveMenu":   "users",
 		"AdminUser":    h.getAdminUser(c),

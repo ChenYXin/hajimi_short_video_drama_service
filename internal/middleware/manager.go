@@ -152,7 +152,7 @@ func (m *Manager) SetupDevelopmentMiddlewares(engine *gin.Engine) {
 	
 	// 更宽松的 CORS 配置
 	devCorsConfig := CORSConfig{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:3000"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:1800", "http://127.0.0.1:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"*"},
 		ExposeHeaders:    []string{"*"},

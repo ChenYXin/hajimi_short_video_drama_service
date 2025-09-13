@@ -191,7 +191,13 @@ func (r *Router) setupRoutes() {
 	r.engine.Static("/static", "./web/static")
 	
 	// 设置 HTML 模板
-	tmpl := template.Must(template.New("").Funcs(templateFuncs.GetFuncMap()).ParseGlob("web/templates/**/*"))
+	tmpl := template.New("").Funcs(templateFuncs.GetFuncMap())
+	
+	// 手动加载所有模板文件
+	tmpl = template.Must(tmpl.ParseGlob("web/templates/auth/*.html"))
+	tmpl = template.Must(tmpl.ParseGlob("web/templates/admin/*.html"))
+	tmpl = template.Must(tmpl.ParseGlob("web/templates/layout/*.html"))
+	
 	r.engine.SetHTMLTemplate(tmpl)
 	
 	// Web 管理界面路由

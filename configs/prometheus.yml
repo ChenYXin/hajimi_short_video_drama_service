@@ -34,7 +34,7 @@ scrape_configs:
   # 应用程序健康检查
   - job_name: 'hajimi-health'
     static_configs:
-      - targets: ['localhost:8080']
+      - targets: ['localhost:1800']
     metrics_path: '/health'
     scrape_interval: 30s
     scrape_timeout: 5s

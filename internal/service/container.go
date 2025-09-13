@@ -31,7 +31,7 @@ func NewContainer(
 	// 创建文件服务
 	fileService := NewFileService(
 		cfg.Upload.UploadPath,
-		"http://localhost:8080", // 这里应该从配置中获取
+		"http://localhost:1800", // 这里应该从配置中获取
 		int64(cfg.Upload.MaxSize)*1024*1024, // 转换为字节
 		cfg.Upload.AllowedTypes,
 	)

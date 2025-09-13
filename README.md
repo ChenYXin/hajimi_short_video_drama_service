@@ -89,10 +89,10 @@ go run cmd/server/main.go
 
 启动成功后，可以访问以下地址：
 
-- **应用程序**: http://localhost:8080
-- **管理后台**: http://localhost:8080/admin
-- **API 文档**: http://localhost:8080/swagger/index.html
-- **健康检查**: http://localhost:8080/health
+- **应用程序**: http://localhost:1800
+- **管理后台**: http://localhost:1800/admin
+- **API 文档**: http://localhost:1800/swagger/index.html
+- **健康检查**: http://localhost:1800/health
 - **监控面板**: http://localhost:3000 (Grafana)
 - **指标数据**: http://localhost:9091 (Prometheus)
 
@@ -268,9 +268,9 @@ export APP_JWT_SECRET=production-secret
 ## 📊 监控和运维
 
 ### 服务地址
-- **应用程序**: http://localhost:8080
-- **管理后台**: http://localhost:8080/admin (admin/admin123)
-- **健康检查**: http://localhost:8080/health
+- **应用程序**: http://localhost:1800
+- **管理后台**: http://localhost:1800/admin (admin/admin123)
+- **健康检查**: http://localhost:1800/health
 - **Prometheus**: http://localhost:9091
 - **Grafana**: http://localhost:3000 (admin/admin123)
 

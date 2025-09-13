@@ -11,7 +11,7 @@ func GetTestConfig() *config.Config {
 	return &config.Config{
 		Server: config.ServerConfig{
 			Host: "localhost",
-			Port: 8080,
+			Port: 1800,
 			Mode: "test",
 		},
 		Database: config.DatabaseConfig{
