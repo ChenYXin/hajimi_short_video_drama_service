@@ -36,7 +36,7 @@ deps: ## 安装和更新依赖
 # 测试
 test: ## 运行所有测试
 	@echo "🧪 运行所有测试..."
-	./scripts/run_tests.sh
+	go test -v ./...
 
 test-unit: ## 运行单元测试
 	@echo "🔬 运行单元测试..."
@@ -96,12 +96,12 @@ db-migrate: ## 运行数据库迁移
 
 db-seed: ## 填充测试数据
 	@echo "🌱 填充测试数据..."
-	mysql -u root -p gin_mysql_api < scripts/seed_data.sql
+	mysql -u root -p hajimi < scripts/seed_data.sql
 
 db-reset: ## 重置数据库
 	@echo "🔄 重置数据库..."
-	mysql -u root -p -e "DROP DATABASE IF EXISTS gin_mysql_api; CREATE DATABASE gin_mysql_api;"
-	mysql -u root -p gin_mysql_api < scripts/init_db.sql
+	mysql -u root -p -e "DROP DATABASE IF EXISTS hajimi; CREATE DATABASE hajimi;"
+	mysql -u root -p hajimi < scripts/init_db.sql
 
 # Docker
 docker-build: ## 构建 Docker 镜像
@@ -110,15 +110,15 @@ docker-build: ## 构建 Docker 镜像
 
 docker-run: ## 运行 Docker 容器
 	@echo "🐳 运行 Docker 容器..."
-	docker-compose up -d
+	docker compose up -d
 
 docker-stop: ## 停止 Docker 容器
 	@echo "🛑 停止 Docker 容器..."
-	docker-compose down
+	docker compose down
 
 docker-logs: ## 查看 Docker 日志
 	@echo "📋 查看 Docker 日志..."
-	docker-compose logs -f
+	docker compose logs -f
 
 # 清理
 clean: ## 清理构建文件
@@ -164,3 +164,92 @@ info: ## 显示项目信息
 	@echo "Git 分支: $$(git branch --show-current 2>/dev/null || echo 'N/A')"
 	@echo "Git 提交: $$(git rev-parse --short HEAD 2>/dev/null || echo 'N/A')"
 	@echo "依赖数量: $$(go list -m all | wc -l)"
+# 部署相
+关
+deploy: ## 部署到生产环境
+	@echo "🚀 部署到生产环境..."
+	./scripts/deploy.sh
+
+deploy-dev: ## 部署开发环境
+	@echo "🔧 部署开发环境..."
+	APP_MODE=debug LOG_LEVEL=debug docker compose up --build -d
+
+stop: ## 停止所有服务
+	@echo "🛑 停止所有服务..."
+	docker compose down
+
+logs: ## 查看应用日志
+	@echo "📋 查看应用日志..."
+	docker compose logs -f app
+
+logs-all: ## 查看所有服务日志
+	@echo "📋 查看所有服务日志..."
+	docker compose logs -f
+
+status: ## 查看服务状态
+	@echo "📊 服务状态:"
+	docker compose ps
+
+# 容器操作
+shell: ## 进入应用容器
+	@echo "🐚 进入应用容器..."
+	docker compose exec app sh
+
+db-shell: ## 进入数据库容器
+	@echo "🗄️ 进入数据库容器..."
+	docker compose exec mysql mysql -u root -pa123d789cDE hajimi
+
+redis-shell: ## 进入Redis容器
+	@echo "🔴 进入Redis容器..."
+	docker compose exec redis redis-cli
+
+# 备份和恢复
+backup-db: ## 备份数据库
+	@echo "💾 备份数据库..."
+	docker compose exec mysql mysqldump -u root -pa123d789cDE hajimi > backup_$(shell date +%Y%m%d_%H%M%S).sql
+
+restore-db: ## 恢复数据库
+	@echo "🔄 恢复数据库..."
+	@read -p "请输入备份文件名: " file; \
+	docker compose exec -T mysql mysql -u root -pa123d789cDE hajimi < $$file
+
+# 监控
+metrics: ## 查看Prometheus指标
+	@echo "📊 打开Prometheus指标..."
+	@echo "应用指标: http://localhost:9090/metrics"
+	@echo "Prometheus: http://localhost:9091"
+	@echo "Grafana: http://localhost:3000"
+
+health: ## 检查应用健康状态
+	@echo "🏥 检查应用健康状态..."
+	@curl -f http://localhost:8080/health || echo "应用程序未运行"
+
+# 完整的CI/CD流程
+ci: deps fmt vet lint test build ## 运行CI流程
+	@echo "✅ CI流程完成"
+
+cd: ci deploy ## 运行CD流程
+	@echo "🚀 CD流程完成"
+
+# 故障排除
+fix-docker: ## 修复Docker常见问题
+	@echo "🔧 修复Docker问题..."
+	docker system prune -f
+	docker compose down
+	docker compose pull
+	docker compose up --build -d
+
+reset: ## 重置所有服务和数据
+	@echo "🔄 重置所有服务..."
+	docker compose down -v
+	docker system prune -f
+	docker compose up --build -d
+
+health-check: ## 健康检查
+	@echo "🏥 执行健康检查..."
+	@echo "检查Docker状态:"
+	@docker info > /dev/null && echo "✅ Docker运行正常" || echo "❌ Docker未运行"
+	@echo "检查服务状态:"
+	@docker compose ps
+	@echo "检查应用健康:"
+	@curl -f http://localhost:8080/health > /dev/null 2>&1 && echo "✅ 应用运行正常" || echo "❌ 应用未响应"

@@ -20,6 +20,12 @@ go.work
 # Environment variables
 .env
 
+# Configuration files with sensitive data
+configs/production.yaml
+
+# Docker override files
+docker-compose.override.yml
+
 # Log files
 logs/
 *.log

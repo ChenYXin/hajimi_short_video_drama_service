@@ -143,13 +143,12 @@ func (h *WebHandler) EpisodesPage(c *gin.Context) {
 	var dramaID uint
 	var drama *models.Drama
 	var episodes *models.PaginatedEpisodes
-	var err error
 
 	if dramaIDStr != "" {
 		id, parseErr := strconv.ParseUint(dramaIDStr, 10, 32)
 		if parseErr == nil {
 			dramaID = uint(id)
-			episodes, err = h.adminService.GetEpisodeList(dramaID, page, pageSize)
+			episodes, _ = h.adminService.GetEpisodeList(dramaID, page, pageSize)
 		}
 	}
 

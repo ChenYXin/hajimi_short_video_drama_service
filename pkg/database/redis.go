@@ -12,6 +12,33 @@ import (
 // RedisClient 全局 Redis 客户端实例
 var RedisClient *redis.Client
 
+// NewRedisConnection 创建新的Redis连接
+func NewRedisConnection(cfg *config.Config) (*redis.Client, error) {
+	return InitRedisWithConfig(&cfg.Redis)
+}
+
+// InitRedisWithConfig 使用配置初始化 Redis 连接
+func InitRedisWithConfig(cfg *config.RedisConfig) (*redis.Client, error) {
+	// 创建 Redis 客户端
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.GetRedisAddr(),
+		Password: cfg.Password,
+		DB:       cfg.DB,
+		PoolSize: cfg.PoolSize,
+	})
+
+	// 测试连接
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := rdb.Ping(ctx).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to redis: %w", err)
+	}
+
+	return rdb, nil
+}
+
 // InitRedis 初始化 Redis 连接
 func InitRedis(cfg *config.RedisConfig) error {
 	// 创建 Redis 客户端

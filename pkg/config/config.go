@@ -79,6 +79,34 @@ type PrometheusConfig struct {
 	Port    int    `mapstructure:"port"`
 }
 
+// LoadConfig 加载指定路径的配置文件
+func LoadConfig(configFile string) (*Config, error) {
+	viper.SetConfigFile(configFile)
+	
+	// 设置环境变量前缀
+	viper.SetEnvPrefix("APP")
+	viper.AutomaticEnv()
+	
+	// 设置环境变量键名替换
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	// 读取配置文件
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	var config Config
+	if err := viper.Unmarshal(&config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	// 转换时间单位
+	config.Database.ConnMaxLifetime *= time.Second
+	config.JWT.Expiration *= time.Hour
+
+	return &config, nil
+}
+
 // Load 加载配置文件
 func Load(configPath string) (*Config, error) {
 	viper.SetConfigName("config")

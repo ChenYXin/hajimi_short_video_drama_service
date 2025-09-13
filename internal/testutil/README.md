@@ -134,7 +134,7 @@ episodes := factory.Episode.CreateEpisodes(drama.ID, 10)
 
 测试配置使用独立的数据库和Redis实例，避免与开发环境冲突：
 
-- 数据库: `gin_mysql_api_test`
+- 数据库: `hajimi_test`
 - Redis DB: `1` (而不是默认的0)
 - JWT Secret: 测试专用密钥
 - 文件上传: `./test_uploads` 目录

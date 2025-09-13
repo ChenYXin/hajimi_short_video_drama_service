@@ -1,44 +1,48 @@
+# 本地开发环境配置
+# 生产环境请复制此文件为 production.yaml 并修改敏感信息
+# 支持环境变量覆盖，格式：APP_SECTION_KEY (如 APP_DATABASE_PASSWORD)
+
 server:
-  host: "0.0.0.0"
-  port: 8080
-  mode: "debug" # debug, release, test
+  host: "0.0.0.0"          # 服务监听地址
+  port: 1800               # 服务端口
+  mode: "debug"            # 运行模式: debug, release, test
 
 database:
-  host: "localhost"
-  port: 3306
-  username: "root"
-  password: "password"
-  dbname: "gin_mysql_api"
-  charset: "utf8mb4"
-  parseTime: true
-  loc: "Local"
-  maxIdleConns: 10
-  maxOpenConns: 100
-  connMaxLifetime: 3600 # seconds
+  host: "localhost"        # 数据库地址
+  port: 3306              # 数据库端口
+  username: "root"         # 数据库用户名
+  password: "a123d789cDE"  # 数据库密码 (与Docker中一致)
+  dbname: "hajimi"         # 数据库名
+  charset: "utf8mb4"       # 字符集
+  parseTime: true          # 解析时间
+  loc: "Local"            # 时区
+  maxIdleConns: 10        # 最大空闲连接数
+  maxOpenConns: 100       # 最大打开连接数
+  connMaxLifetime: 3600   # 连接最大生存时间(秒)
 
 redis:
-  host: "localhost"
-  port: 6379
-  password: ""
-  db: 0
-  poolSize: 10
+  host: "localhost"        # Redis地址
+  port: 6379              # Redis端口
+  password: ""            # Redis密码 (生产环境建议设置)
+  db: 0                   # Redis数据库编号
+  poolSize: 10            # 连接池大小
 
 jwt:
-  secret: "your-secret-key-change-in-production"
-  expiration: 24 # hours
+  secret: "hajimi"  # JWT密钥 (生产环境必须修改)
+  expiration: 24          # Token过期时间(小时)
 
 upload:
-  maxSize: 100 # MB
-  allowedTypes: ["jpg", "jpeg", "png", "gif", "mp4", "avi", "mov"]
-  uploadPath: "./uploads"
+  maxSize: 100            # 最大上传文件大小(MB)
+  allowedTypes: ["jpg", "jpeg", "png", "gif", "mp4", "avi", "mov"]  # 允许的文件类型
+  uploadPath: "./uploads" # 上传文件存储路径
 
 logging:
-  level: "info" # debug, info, warn, error
-  format: "json" # json, text
-  output: "stdout" # stdout, file
-  filename: "logs/app.log"
+  level: "info"           # 日志级别: debug, info, warn, error
+  format: "json"          # 日志格式: json, text
+  output: "stdout"        # 日志输出: stdout, file
+  filename: "logs/app.log" # 日志文件路径
 
 prometheus:
-  enabled: true
-  path: "/metrics"
-  port: 9090
+  enabled: true           # 是否启用Prometheus监控
+  path: "/metrics"        # 监控指标路径
+  port: 9092             # 监控服务端口

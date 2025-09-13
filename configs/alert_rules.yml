@@ -1,0 +1,134 @@
+groups:
+  - name: gin-mysql-api-alerts
+    rules:
+      # HTTP 错误率告警
+      - alert: HighHTTPErrorRate
+        expr: (rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "HTTP错误率过高"
+          description: "应用程序的HTTP 5xx错误率在过去5分钟内超过10%"
+
+      # 响应时间告警
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "HTTP响应时间过长"
+          description: "95%的HTTP请求响应时间超过1秒"
+
+      # 数据库连接告警
+      - alert: DatabaseConnectionHigh
+        expr: database_connections{state="in_use"} / database_connections{state="open"} > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "数据库连接使用率过高"
+          description: "数据库连接使用率超过80%"
+
+      # Redis连接告警
+      - alert: RedisConnectionHigh
+        expr: redis_connections{state="active"} > 50
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis活跃连接数过高"
+          description: "Redis活跃连接数超过50"
+
+      # 应用程序宕机告警
+      - alert: ApplicationDown
+        expr: up{job="gin-mysql-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "应用程序宕机"
+          description: "Gin MySQL API应用程序已宕机超过1分钟"
+
+      # 数据库宕机告警
+      - alert: DatabaseDown
+        expr: up{job="mysql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "数据库宕机"
+          description: "MySQL数据库已宕机超过1分钟"
+
+      # Redis宕机告警
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis宕机"
+          description: "Redis服务已宕机超过1分钟"
+
+      # 磁盘空间告警
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "磁盘空间不足"
+          description: "磁盘可用空间少于10%"
+
+      # 内存使用率告警
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "内存使用率过高"
+          description: "系统内存使用率超过90%"
+
+      # CPU使用率告警
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU使用率过高"
+          description: "系统CPU使用率超过80%"
+
+  - name: business-metrics-alerts
+    rules:
+      # 用户注册异常告警
+      - alert: UnusualUserRegistrations
+        expr: rate(user_registrations_total[1h]) > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "用户注册数量异常"
+          description: "过去1小时内用户注册数量超过100个"
+
+      # 缓存命中率低告警
+      - alert: LowCacheHitRate
+        expr: (rate(cache_hits_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m]))) < 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "缓存命中率过低"
+          description: "缓存命中率低于50%"
+
+      # 文件上传失败率高告警
+      - alert: HighFileUploadFailureRate
+        expr: (rate(file_uploads_total{status="error"}[5m]) / rate(file_uploads_total[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "文件上传失败率过高"
+          description: "文件上传失败率超过20%"

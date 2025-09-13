@@ -13,6 +13,49 @@ import (
 // DB 全局数据库实例
 var DB *gorm.DB
 
+// NewConnection 创建新的数据库连接
+func NewConnection(cfg *config.Config) (*gorm.DB, error) {
+	return InitMySQLWithConfig(&cfg.Database)
+}
+
+// InitMySQLWithConfig 使用配置初始化 MySQL 数据库连接
+func InitMySQLWithConfig(cfg *config.DatabaseConfig) (*gorm.DB, error) {
+	// 构建数据库连接字符串
+	dsn := cfg.GetDSN()
+	
+	// 配置 GORM
+	gormConfig := &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+		NowFunc: func() time.Time {
+			return time.Now().Local()
+		},
+	}
+
+	// 连接数据库
+	db, err := gorm.Open(mysql.Open(dsn), gormConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// 获取底层的 sql.DB 对象
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get underlying sql.DB: %w", err)
+	}
+
+	// 配置连接池
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
+
+	// 测试连接
+	if err := sqlDB.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	return db, nil
+}
+
 // InitMySQL 初始化 MySQL 数据库连接
 func InitMySQL(cfg *config.DatabaseConfig) error {
 	// 构建数据库连接字符串

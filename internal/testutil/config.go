@@ -19,7 +19,7 @@ func GetTestConfig() *config.Config {
 			Port:            3306,
 			Username:        "test",
 			Password:        "test",
-			DBName:          "gin_mysql_api_test",
+			DBName:          "hajimi_test",
 			Charset:         "utf8mb4",
 			ParseTime:       true,
 			Loc:             "Local",
