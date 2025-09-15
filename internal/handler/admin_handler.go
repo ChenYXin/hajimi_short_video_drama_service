@@ -41,7 +41,7 @@ func NewAdminHandler(adminService service.AdminService, userService service.User
 // @Router /api/admin/dramas [post]
 func (h *AdminHandler) CreateDrama(c *gin.Context) {
 	var req models.CreateDramaRequest
-	
+
 	if err := h.ValidateRequest(c, &req); err != nil {
 		h.ValidationErrorResponse(c, err)
 		return
@@ -133,7 +133,7 @@ func (h *AdminHandler) DeleteDrama(c *gin.Context) {
 // @Router /api/admin/episodes [post]
 func (h *AdminHandler) CreateEpisode(c *gin.Context) {
 	var req models.CreateEpisodeRequest
-	
+
 	if err := h.ValidateRequest(c, &req); err != nil {
 		h.ValidationErrorResponse(c, err)
 		return
@@ -258,6 +258,28 @@ func (h *AdminHandler) GetEpisodeList(c *gin.Context) {
 	episodes, err := h.adminService.GetEpisodeList(uint(dramaID), page, pageSize)
 	if err != nil {
 		h.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	h.SuccessResponse(c, episodes)
+}
+
+// GetAllEpisodeList 获取所有剧集列表（管理员视图）
+// @Summary 获取所有剧集列表（管理员）
+// @Description 管理员获取所有剧集列表
+// @Tags 管理员
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} models.APIResponse{data=models.PaginatedEpisodes}
+// @Router /api/admin/episodes [get]
+func (h *AdminHandler) GetAllEpisodeList(c *gin.Context) {
+	page, pageSize := h.GetPaginationParams(c)
+
+	episodes, err := h.adminService.GetAllEpisodeList(page, pageSize)
+	if err != nil {
+		h.ErrorResponse(c, http.StatusInternalServerError, "获取剧集列表失败")
 		return
 	}
 

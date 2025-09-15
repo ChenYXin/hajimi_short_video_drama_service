@@ -18,13 +18,31 @@
 - **缓存系统**: Redis 缓存，提升性能
 - **文件上传**: 支持图片和视频文件上传
 
-### 🛠️ 技术特性
+### 🛠️ 技术栈
+
+**后端技术**:
+- **Go 1.21+**: 高性能后端服务
+- **Gin**: 轻量级 Web 框架
+- **GORM**: ORM 数据库操作
+- **JWT**: 用户认证和授权
+- **MySQL**: 主数据库
+- **Redis**: 缓存和会话存储
+
+**前端技术**:
+- **Vue 3**: 现代化前端框架
+- **Vite**: 快速构建工具
+- **Element Plus**: 企业级 UI 组件库
+- **Vue Router**: 单页应用路由
+- **Pinia**: 状态管理
+- **Axios**: HTTP 客户端
+
+**技术特性**:
 - **RESTful API**: 标准化的 API 设计
-- **Web 管理界面**: 响应式管理后台
+- **SPA 架构**: 现代化单页应用体验
+- **响应式设计**: 支持移动端和桌面端
 - **中间件支持**: 认证、日志、CORS、限流
 - **数据库优化**: 连接池、索引优化
 - **容器化部署**: Docker + Docker Compose
-- **测试覆盖**: 单元测试 + 集成测试
 
 ## 🚀 快速开始
 
@@ -56,30 +74,41 @@ make dev
 
 #### 环境要求
 - Go 1.21+
-- MySQL 8.0+
-- Redis 7.0+
+- Node.js 16+ (用于前端构建)
+- Docker & Docker Compose (用于 MySQL 和 Redis)
 
 #### 安装步骤
 
 ```bash
 # 1. 克隆项目
 git clone <repository-url>
-cd gin-mysql-api
+cd hajimi_short_video_drama_service
 
-# 2. 安装依赖
+# 2. 启动依赖服务
+docker compose up -d mysql redis
+
+# 3. 构建前端
+cd web
+npm install
+npm run build
+cd ..
+
+# 4. 安装 Go 依赖
 go mod download
 
-# 3. 初始化数据库
-mysql -u root -p < scripts/init_db.sql
-mysql -u root -p hajimi < scripts/seed_data.sql
-
-# 4. 配置应用
-# config.yaml 已包含详细注释，直接编辑即可
-vim configs/config.yaml
-# 修改数据库密码、JWT密钥等敏感信息
-
 # 5. 启动应用
+unset GOROOT  # 如果遇到 Go 版本问题
 go run cmd/server/main.go
+```
+
+#### 快速开发脚本
+
+```bash
+# 一键启动开发环境（包含前端构建）
+./scripts/dev.sh --build-frontend
+
+# 仅启动服务（前端已构建）
+./scripts/dev.sh
 ```
 
 ## 📖 使用指南
@@ -88,10 +117,9 @@ go run cmd/server/main.go
 
 启动成功后，可以访问以下地址：
 
-- **应用程序**: http://localhost:1800
-- **管理后台**: http://localhost:1800/admin
-- **API 文档**: http://localhost:1800/swagger/index.html
-- **健康检查**: http://localhost:1800/health
+- **Vue 管理系统**: http://localhost:1800 (现代化 Vue 3 + Element Plus 界面)
+- **API 健康检查**: http://localhost:1800/health
+- **API 就绪检查**: http://localhost:1800/ready
 
 ### 🔑 默认账号
 
@@ -145,7 +173,7 @@ POST /admin/api/upload
 ### 📁 项目结构
 
 ```
-gin-mysql-api/
+hajimi_short_video_drama_service/
 ├── cmd/server/           # 应用程序入口
 ├── internal/            # 内部包
 │   ├── handler/         # HTTP 处理器
@@ -155,11 +183,15 @@ gin-mysql-api/
 │   ├── router/          # 路由配置
 │   └── service/         # 业务逻辑层
 ├── pkg/                 # 公共包
-├── web/                 # Web 资源
+├── web/                 # Vue 3 前端项目
+│   ├── src/             # Vue 源码
+│   ├── dist/            # 构建输出
+│   ├── package.json     # 前端依赖
+│   └── vite.config.js   # Vite 配置
 ├── configs/             # 配置文件
 ├── scripts/             # 脚本文件
-├── tests/               # 测试文件
-└── docs/                # 文档
+├── uploads/             # 上传文件目录
+└── docker-compose.yml   # Docker 编排文件
 ```
 
 ### 🧪 测试

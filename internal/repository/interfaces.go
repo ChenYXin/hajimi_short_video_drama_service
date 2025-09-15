@@ -37,6 +37,7 @@ type EpisodeRepository interface {
 	GetByIDWithDrama(id uint) (*models.Episode, error)
 	GetByDramaID(dramaID uint) ([]models.Episode, error)
 	GetByDramaIDPaginated(dramaID uint, offset, limit int) ([]models.Episode, int64, error)
+	GetList(offset, limit int) ([]models.Episode, int64, error)
 	Update(episode *models.Episode) error
 	Delete(id uint) error
 	IncrementViewCount(id uint) error

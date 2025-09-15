@@ -23,8 +23,8 @@ type DramaService interface {
 
 // dramaService 短剧服务实现
 type dramaService struct {
-	dramaRepo   repository.DramaRepository
-	episodeRepo repository.EpisodeRepository
+	dramaRepo    repository.DramaRepository
+	episodeRepo  repository.EpisodeRepository
 	cacheService CacheService
 }
 
@@ -42,7 +42,7 @@ func NewDramaService(
 }
 
 // GetDramas 获取短剧列表
-func (s *dramaService) GetDramas(page, pageSize int, genre string) (*models.PaginatedDramas, error) {
+func (s *dramaService) GetDramas(page, pageSize int, category string) (*models.PaginatedDramas, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -51,7 +51,7 @@ func (s *dramaService) GetDramas(page, pageSize int, genre string) (*models.Pagi
 	}
 
 	// 尝试从缓存获取
-	cacheKey := fmt.Sprintf("dramas:page:%d:size:%d:genre:%s", page, pageSize, genre)
+	cacheKey := fmt.Sprintf("dramas:page:%d:size:%d:category:%s", page, pageSize, category)
 	var cachedResult models.PaginatedDramas
 	if s.cacheService != nil {
 		err := s.cacheService.GetJSON(cacheKey, &cachedResult)
@@ -65,8 +65,8 @@ func (s *dramaService) GetDramas(page, pageSize int, genre string) (*models.Pagi
 	var total int64
 	var err error
 
-	if genre != "" {
-		dramas, total, err = s.dramaRepo.GetByGenre(genre, offset, pageSize)
+	if category != "" {
+		dramas, total, err = s.dramaRepo.GetByGenre(category, offset, pageSize)
 	} else {
 		dramas, total, err = s.dramaRepo.GetActiveList(offset, pageSize)
 	}

@@ -2,8 +2,9 @@ package repository
 
 import (
 	"errors"
-	"gorm.io/gorm"
 	"gin-mysql-api/internal/models"
+
+	"gorm.io/gorm"
 )
 
 // dramaRepository 短剧仓库实现
@@ -36,7 +37,7 @@ func (r *dramaRepository) GetByID(id uint) (*models.Drama, error) {
 // GetByIDWithEpisodes 根据ID获取短剧（包含剧集信息）
 func (r *dramaRepository) GetByIDWithEpisodes(id uint) (*models.Drama, error) {
 	var drama models.Drama
-	if err := r.db.Preload("Episodes", "status = ?", "active").First(&drama, id).Error; err != nil {
+	if err := r.db.Preload("Episodes", "status = ?", "published").First(&drama, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -49,24 +50,24 @@ func (r *dramaRepository) GetByIDWithEpisodes(id uint) (*models.Drama, error) {
 func (r *dramaRepository) GetList(offset, limit int, genre string) ([]models.Drama, int64, error) {
 	var dramas []models.Drama
 	var total int64
-	
+
 	query := r.db.Model(&models.Drama{})
-	
+
 	// 如果指定了类型，添加筛选条件
 	if genre != "" {
 		query = query.Where("genre = ?", genre)
 	}
-	
+
 	// 获取总数
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	// 获取分页数据，按创建时间倒序
 	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&dramas).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	return dramas, total, nil
 }
 
@@ -87,23 +88,23 @@ func (r *dramaRepository) IncrementViewCount(id uint) error {
 }
 
 // GetByGenre 根据类型获取短剧列表
-func (r *dramaRepository) GetByGenre(genre string, offset, limit int) ([]models.Drama, int64, error) {
+func (r *dramaRepository) GetByGenre(category string, offset, limit int) ([]models.Drama, int64, error) {
 	var dramas []models.Drama
 	var total int64
-	
-	query := r.db.Model(&models.Drama{}).Where("genre = ? AND status = ?", genre, "active")
-	
+
+	query := r.db.Model(&models.Drama{}).Where("category = ? AND status = ?", category, "published")
+
 	// 获取总数
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	// 获取分页数据
 	if err := query.Order("view_count DESC, created_at DESC").
 		Offset(offset).Limit(limit).Find(&dramas).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	return dramas, total, nil
 }
 
@@ -111,19 +112,19 @@ func (r *dramaRepository) GetByGenre(genre string, offset, limit int) ([]models.
 func (r *dramaRepository) GetActiveList(offset, limit int) ([]models.Drama, int64, error) {
 	var dramas []models.Drama
 	var total int64
-	
-	query := r.db.Model(&models.Drama{}).Where("status = ?", "active")
-	
+
+	query := r.db.Model(&models.Drama{}).Where("status = ?", "published")
+
 	// 获取总数
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	// 获取分页数据，按观看次数和创建时间排序
 	if err := query.Order("view_count DESC, created_at DESC").
 		Offset(offset).Limit(limit).Find(&dramas).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	return dramas, total, nil
 }

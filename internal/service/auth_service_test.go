@@ -46,7 +46,7 @@ func TestAuthService_RegisterUser(t *testing.T) {
 	t.Run("用户名已存在", func(t *testing.T) {
 		mockUserRepo := new(MockUserRepository)
 		authService := NewAuthService(mockUserRepo, mockAdminRepo, jwtManager)
-		
+
 		req := models.RegisterRequest{
 			Username: "existinguser",
 			Email:    "test@example.com",
@@ -68,7 +68,7 @@ func TestAuthService_RegisterUser(t *testing.T) {
 	t.Run("邮箱已存在", func(t *testing.T) {
 		mockUserRepo := new(MockUserRepository)
 		authService := NewAuthService(mockUserRepo, mockAdminRepo, jwtManager)
-		
+
 		req := models.RegisterRequest{
 			Username: "newuser",
 			Email:    "existing@example.com",
@@ -127,7 +127,7 @@ func TestAuthService_LoginUser(t *testing.T) {
 	t.Run("用户不存在", func(t *testing.T) {
 		mockUserRepo := new(MockUserRepository)
 		authService := NewAuthService(mockUserRepo, mockAdminRepo, jwtManager)
-		
+
 		req := models.LoginRequest{
 			Email:    "nonexistent@example.com",
 			Password: "password123",
@@ -147,7 +147,7 @@ func TestAuthService_LoginUser(t *testing.T) {
 	t.Run("密码错误", func(t *testing.T) {
 		mockUserRepo := new(MockUserRepository)
 		authService := NewAuthService(mockUserRepo, mockAdminRepo, jwtManager)
-		
+
 		req := models.LoginRequest{
 			Email:    "test@example.com",
 			Password: "wrongpassword",
@@ -176,7 +176,7 @@ func TestAuthService_LoginUser(t *testing.T) {
 	t.Run("用户已被禁用", func(t *testing.T) {
 		mockUserRepo := new(MockUserRepository)
 		authService := NewAuthService(mockUserRepo, mockAdminRepo, jwtManager)
-		
+
 		req := models.LoginRequest{
 			Email:    "test@example.com",
 			Password: "password123",
@@ -220,7 +220,7 @@ func TestAuthService_LoginAdmin(t *testing.T) {
 			ID:       1,
 			Username: req.Username,
 			Password: hashedPassword,
-			IsActive: true,
+			Status:   "active",
 		}
 
 		mockAdminRepo.On("GetByUsername", req.Username).Return(admin, nil)
@@ -238,7 +238,7 @@ func TestAuthService_LoginAdmin(t *testing.T) {
 	t.Run("管理员不存在", func(t *testing.T) {
 		mockAdminRepo := new(MockAdminRepository)
 		authService := NewAuthService(mockUserRepo, mockAdminRepo, jwtManager)
-		
+
 		req := models.AdminLoginRequest{
 			Username: "nonexistent",
 			Password: "password123",

@@ -244,7 +244,7 @@ func TestAdminService_Login(t *testing.T) {
 	mockEpisodeRepo := new(MockEpisodeRepository)
 	mockCacheService := new(MockCacheService)
 	jwtManager := utils.NewJWTManager("test-secret", time.Hour)
-	
+
 	adminService := NewAdminService(mockAdminRepo, mockDramaRepo, mockEpisodeRepo, jwtManager, mockCacheService)
 
 	t.Run("成功登录", func(t *testing.T) {
@@ -258,7 +258,7 @@ func TestAdminService_Login(t *testing.T) {
 			ID:       1,
 			Username: req.Username,
 			Password: hashedPassword,
-			IsActive: true,
+			Status:   "active",
 		}
 
 		mockAdminRepo.On("GetByUsername", req.Username).Return(admin, nil)
@@ -276,7 +276,7 @@ func TestAdminService_Login(t *testing.T) {
 	t.Run("管理员不存在", func(t *testing.T) {
 		mockAdminRepo := new(MockAdminRepository)
 		adminService := NewAdminService(mockAdminRepo, mockDramaRepo, mockEpisodeRepo, jwtManager, mockCacheService)
-		
+
 		req := models.AdminLoginRequest{
 			Username: "nonexistent",
 			Password: "password123",
@@ -296,7 +296,7 @@ func TestAdminService_Login(t *testing.T) {
 	t.Run("管理员已被禁用", func(t *testing.T) {
 		mockAdminRepo := new(MockAdminRepository)
 		adminService := NewAdminService(mockAdminRepo, mockDramaRepo, mockEpisodeRepo, jwtManager, mockCacheService)
-		
+
 		req := models.AdminLoginRequest{
 			Username: "admin",
 			Password: "password123",
@@ -307,7 +307,7 @@ func TestAdminService_Login(t *testing.T) {
 			ID:       1,
 			Username: req.Username,
 			Password: hashedPassword,
-			IsActive: false, // 管理员被禁用
+			Status:   "inactive", // 管理员被禁用
 		}
 
 		mockAdminRepo.On("GetByUsername", req.Username).Return(admin, nil)
@@ -328,14 +328,14 @@ func TestAdminService_CreateDrama(t *testing.T) {
 	mockEpisodeRepo := new(MockEpisodeRepository)
 	mockCacheService := new(MockCacheService)
 	jwtManager := utils.NewJWTManager("test-secret", time.Hour)
-	
+
 	adminService := NewAdminService(mockAdminRepo, mockDramaRepo, mockEpisodeRepo, jwtManager, mockCacheService)
 
 	t.Run("成功创建短剧", func(t *testing.T) {
 		req := models.CreateDramaRequest{
 			Title:       "测试短剧",
 			Description: "测试描述",
-			Genre:       "喜剧",
+			Category:    "喜剧",
 		}
 
 		mockDramaRepo.On("Create", mock.AnythingOfType("*models.Drama")).Return(nil)
@@ -348,7 +348,7 @@ func TestAdminService_CreateDrama(t *testing.T) {
 		assert.NotNil(t, drama)
 		assert.Equal(t, req.Title, drama.Title)
 		assert.Equal(t, req.Description, drama.Description)
-		assert.Equal(t, "active", drama.Status) // 默认状态
+		assert.Equal(t, "draft", drama.Status) // 默认状态
 
 		mockDramaRepo.AssertExpectations(t)
 		mockCacheService.AssertExpectations(t)
@@ -361,7 +361,7 @@ func TestAdminService_CreateEpisode(t *testing.T) {
 	mockEpisodeRepo := new(MockEpisodeRepository)
 	mockCacheService := new(MockCacheService)
 	jwtManager := utils.NewJWTManager("test-secret", time.Hour)
-	
+
 	adminService := NewAdminService(mockAdminRepo, mockDramaRepo, mockEpisodeRepo, jwtManager, mockCacheService)
 
 	t.Run("成功创建剧集", func(t *testing.T) {
@@ -397,7 +397,7 @@ func TestAdminService_CreateEpisode(t *testing.T) {
 		mockDramaRepo := new(MockDramaRepository)
 		mockEpisodeRepo := new(MockEpisodeRepository)
 		adminService := NewAdminService(mockAdminRepo, mockDramaRepo, mockEpisodeRepo, jwtManager, mockCacheService)
-		
+
 		req := models.CreateEpisodeRequest{
 			DramaID:    999,
 			Title:      "测试剧集",
@@ -419,7 +419,7 @@ func TestAdminService_CreateEpisode(t *testing.T) {
 		mockDramaRepo := new(MockDramaRepository)
 		mockEpisodeRepo := new(MockEpisodeRepository)
 		adminService := NewAdminService(mockAdminRepo, mockDramaRepo, mockEpisodeRepo, jwtManager, mockCacheService)
-		
+
 		req := models.CreateEpisodeRequest{
 			DramaID:    1,
 			Title:      "测试剧集",

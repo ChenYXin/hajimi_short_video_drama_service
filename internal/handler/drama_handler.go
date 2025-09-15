@@ -30,14 +30,14 @@ func NewDramaHandler(dramaService service.DramaService) *DramaHandler {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param page_size query int false "每页数量" default(20)
-// @Param genre query string false "类型筛选"
+// @Param category query string false "类型筛选"
 // @Success 200 {object} models.APIResponse{data=models.PaginatedDramas}
 // @Router /api/dramas [get]
 func (h *DramaHandler) GetDramas(c *gin.Context) {
 	page, pageSize := h.GetPaginationParams(c)
-	genre := c.Query("genre")
+	category := c.Query("category")
 
-	dramas, err := h.dramaService.GetDramas(page, pageSize, genre)
+	dramas, err := h.dramaService.GetDramas(page, pageSize, category)
 	if err != nil {
 		h.ErrorResponse(c, http.StatusInternalServerError, "获取短剧列表失败")
 		return

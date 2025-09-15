@@ -17,7 +17,7 @@ type TestUser struct {
 func TestInitValidator(t *testing.T) {
 	t.Run("初始化验证器", func(t *testing.T) {
 		InitValidator()
-		
+
 		assert.NotNil(t, Validator)
 	})
 }
@@ -125,10 +125,10 @@ func TestValidateStruct(t *testing.T) {
 
 	t.Run("多个验证错误", func(t *testing.T) {
 		user := TestUser{
-			Username: "", // 必填字段缺失
+			Username: "",              // 必填字段缺失
 			Email:    "invalid-email", // 邮箱格式无效
-			Age:      200, // 超出最大值
-			Status:   "unknown", // 无效状态
+			Age:      200,             // 超出最大值
+			Status:   "unknown",       // 无效状态
 		}
 
 		errors := ValidateStruct(user)
@@ -189,7 +189,7 @@ func TestValidationErrors(t *testing.T) {
 
 	t.Run("空验证错误列表", func(t *testing.T) {
 		errors := ValidationErrors{}
-		
+
 		errorMessage := errors.Error()
 		assert.Empty(t, errorMessage)
 	})
@@ -198,16 +198,16 @@ func TestValidationErrors(t *testing.T) {
 func TestGetErrorMessage(t *testing.T) {
 	// 这个测试需要创建 validator.FieldError 实例，比较复杂
 	// 在实际项目中，可以通过集成测试来验证错误消息的正确性
-	
+
 	t.Run("验证错误消息格式", func(t *testing.T) {
 		InitValidator()
-		
+
 		user := TestUser{
 			Username: "", // required 错误
 		}
 
 		errors := ValidateStruct(user)
-		
+
 		if len(errors) > 0 {
 			assert.Contains(t, errors[0].Message, "必填字段")
 		}
@@ -217,7 +217,7 @@ func TestGetErrorMessage(t *testing.T) {
 // 测试自定义验证规则（如果有的话）
 func TestCustomValidations(t *testing.T) {
 	InitValidator()
-	
+
 	t.Run("自定义验证规则注册", func(t *testing.T) {
 		// 这里可以测试自定义验证规则
 		// 例如手机号验证、视频文件格式验证等
@@ -255,7 +255,7 @@ func TestRealModelValidation(t *testing.T) {
 		req := CreateDramaRequest{
 			Title:       "测试短剧",
 			Description: "测试描述",
-			Genre:       "喜剧",
+			Category:    "喜剧",
 		}
 
 		errors := ValidateStruct(req)

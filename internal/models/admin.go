@@ -2,6 +2,7 @@ package models
 
 import (
 	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -11,8 +12,8 @@ type Admin struct {
 	Username  string         `gorm:"uniqueIndex;size:50;not null" json:"username" validate:"required,min=3,max=50"`
 	Email     string         `gorm:"uniqueIndex;size:100;not null" json:"email" validate:"required,email"`
 	Password  string         `gorm:"size:255;not null" json:"-" validate:"required,min=6"`
-	Role      string         `gorm:"size:20;default:'admin'" json:"role" validate:"oneof=admin super_admin"`
-	IsActive  bool           `gorm:"default:true" json:"is_active"`
+	Role      string         `gorm:"size:20;default:'admin'" json:"role" validate:"oneof=admin super_admin editor"`
+	Status    string         `gorm:"type:enum('active','inactive');default:'active'" json:"status"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
@@ -30,10 +31,15 @@ func (a *Admin) ToJSON() map[string]interface{} {
 		"username":   a.Username,
 		"email":      a.Email,
 		"role":       a.Role,
-		"is_active":  a.IsActive,
+		"status":     a.Status,
 		"created_at": a.CreatedAt,
 		"updated_at": a.UpdatedAt,
 	}
+}
+
+// IsActive 检查管理员是否激活
+func (a *Admin) IsActive() bool {
+	return a.Status == "active"
 }
 
 // BeforeCreate GORM 钩子：创建前处理

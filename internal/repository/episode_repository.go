@@ -2,8 +2,9 @@ package repository
 
 import (
 	"errors"
-	"gorm.io/gorm"
 	"gin-mysql-api/internal/models"
+
+	"gorm.io/gorm"
 )
 
 // episodeRepository 剧集仓库实现
@@ -48,7 +49,7 @@ func (r *episodeRepository) GetByIDWithDrama(id uint) (*models.Episode, error) {
 // GetByDramaID 根据短剧ID获取所有剧集
 func (r *episodeRepository) GetByDramaID(dramaID uint) ([]models.Episode, error) {
 	var episodes []models.Episode
-	if err := r.db.Where("drama_id = ? AND status = ?", dramaID, "active").
+	if err := r.db.Where("drama_id = ? AND status = ?", dramaID, "published").
 		Order("episode_num ASC").Find(&episodes).Error; err != nil {
 		return nil, err
 	}
@@ -59,20 +60,41 @@ func (r *episodeRepository) GetByDramaID(dramaID uint) ([]models.Episode, error)
 func (r *episodeRepository) GetByDramaIDPaginated(dramaID uint, offset, limit int) ([]models.Episode, int64, error) {
 	var episodes []models.Episode
 	var total int64
-	
+
 	query := r.db.Model(&models.Episode{}).Where("drama_id = ?", dramaID)
-	
+
 	// 获取总数
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	// 获取分页数据，按剧集号排序
 	if err := query.Order("episode_num ASC").
 		Offset(offset).Limit(limit).Find(&episodes).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
+	return episodes, total, nil
+}
+
+// GetList 获取所有剧集列表（分页）
+func (r *episodeRepository) GetList(offset, limit int) ([]models.Episode, int64, error) {
+	var episodes []models.Episode
+	var total int64
+
+	query := r.db.Model(&models.Episode{}).Preload("Drama")
+
+	// 获取总数
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// 获取分页数据，按创建时间倒序
+	if err := query.Order("created_at DESC").
+		Offset(offset).Limit(limit).Find(&episodes).Error; err != nil {
+		return nil, 0, err
+	}
+
 	return episodes, total, nil
 }
 

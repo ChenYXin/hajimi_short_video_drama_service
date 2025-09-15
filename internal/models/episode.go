@@ -3,24 +3,25 @@ package models
 import (
 	"fmt"
 	"time"
+
 	"gorm.io/gorm"
 )
 
 // Episode 剧集模型
 type Episode struct {
-	ID          uint           `gorm:"primaryKey" json:"id"`
-	DramaID     uint           `gorm:"not null;index" json:"drama_id" validate:"required"`
-	Title       string         `gorm:"size:200;not null" json:"title" validate:"required,max=200"`
-	EpisodeNum  int            `gorm:"not null;index" json:"episode_num" validate:"required,min=1"`
-	Duration    int            `gorm:"not null" json:"duration" validate:"required,min=1"` // 时长（秒）
-	VideoURL    string         `gorm:"size:500" json:"video_url"`
-	Thumbnail   string         `gorm:"size:255" json:"thumbnail"`
-	Status      string         `gorm:"size:20;default:'active';index" json:"status" validate:"oneof=active inactive draft"`
-	ViewCount   int64          `gorm:"default:0" json:"view_count"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
-	
+	ID         uint           `gorm:"primaryKey" json:"id"`
+	DramaID    uint           `gorm:"not null;index" json:"drama_id" validate:"required"`
+	Title      string         `gorm:"size:200;not null" json:"title" validate:"required,max=200"`
+	EpisodeNum int            `gorm:"not null;index" json:"episode_num" validate:"required,min=1"`
+	Duration   int            `gorm:"not null" json:"duration" validate:"required,min=1"` // 时长（秒）
+	VideoURL   string         `gorm:"size:500" json:"video_url"`
+	Thumbnail  string         `gorm:"size:255" json:"thumbnail"`
+	Status     string         `gorm:"type:enum('draft','published','archived');default:'draft';index" json:"status" validate:"oneof=draft published archived"`
+	ViewCount  int64          `gorm:"default:0" json:"view_count"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
+
 	// 关联关系
 	Drama Drama `gorm:"foreignKey:DramaID;constraint:OnDelete:CASCADE" json:"drama,omitempty"`
 }

@@ -137,7 +137,7 @@ func Load(configPath string) (*Config, error) {
 
 // GetDSN 获取数据库连接字符串
 func (c *DatabaseConfig) GetDSN() string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%t&loc=%s",
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%t&loc=%s&collation=utf8mb4_unicode_ci",
 		c.Username,
 		c.Password,
 		c.Host,

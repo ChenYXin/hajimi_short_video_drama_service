@@ -32,8 +32,8 @@ type CreateDramaRequest struct {
 	CoverImage  string `json:"cover_image"`
 	Director    string `json:"director" validate:"max=100"`
 	Actors      string `json:"actors" validate:"max=500"`
-	Genre       string `json:"genre" validate:"required,max=100"`
-	Status      string `json:"status" validate:"omitempty,oneof=active inactive draft"`
+	Category    string `json:"category" validate:"required,max=100"`
+	Status      string `json:"status" validate:"omitempty,oneof=draft published archived"`
 }
 
 // UpdateDramaRequest 更新短剧请求
@@ -43,21 +43,21 @@ type UpdateDramaRequest struct {
 	CoverImage  string `json:"cover_image"`
 	Director    string `json:"director" validate:"omitempty,max=100"`
 	Actors      string `json:"actors" validate:"omitempty,max=500"`
-	Genre       string `json:"genre" validate:"omitempty,max=100"`
-	Status      string `json:"status" validate:"omitempty,oneof=active inactive draft"`
+	Category    string `json:"category" validate:"omitempty,max=100"`
+	Status      string `json:"status" validate:"omitempty,oneof=draft published archived"`
 }
 
 // 剧集相关 DTO
 
 // CreateEpisodeRequest 创建剧集请求
 type CreateEpisodeRequest struct {
-	DramaID     uint   `json:"drama_id" validate:"required"`
-	Title       string `json:"title" validate:"required,max=200"`
-	EpisodeNum  int    `json:"episode_num" validate:"required,min=1"`
-	Duration    int    `json:"duration" validate:"required,min=1"`
-	VideoURL    string `json:"video_url"`
-	Thumbnail   string `json:"thumbnail"`
-	Status      string `json:"status" validate:"omitempty,oneof=active inactive draft"`
+	DramaID    uint   `json:"drama_id" validate:"required"`
+	Title      string `json:"title" validate:"required,max=200"`
+	EpisodeNum int    `json:"episode_num" validate:"required,min=1"`
+	Duration   int    `json:"duration" validate:"required,min=1"`
+	VideoURL   string `json:"video_url"`
+	Thumbnail  string `json:"thumbnail"`
+	Status     string `json:"status" validate:"omitempty,oneof=draft published archived"`
 }
 
 // UpdateEpisodeRequest 更新剧集请求
@@ -67,7 +67,7 @@ type UpdateEpisodeRequest struct {
 	Duration   int    `json:"duration" validate:"omitempty,min=1"`
 	VideoURL   string `json:"video_url"`
 	Thumbnail  string `json:"thumbnail"`
-	Status     string `json:"status" validate:"omitempty,oneof=active inactive draft"`
+	Status     string `json:"status" validate:"omitempty,oneof=draft published archived"`
 }
 
 // 管理员相关 DTO

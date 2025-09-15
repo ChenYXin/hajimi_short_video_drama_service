@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"gin-mysql-api/internal/models"
+
 	"gorm.io/gorm"
 )
 
@@ -33,7 +34,7 @@ func CreateIndexes(db *gorm.DB) error {
 	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)").Error; err != nil {
 		return fmt.Errorf("failed to create username index: %w", err)
 	}
-	
+
 	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)").Error; err != nil {
 		return fmt.Errorf("failed to create email index: %w", err)
 	}
@@ -42,11 +43,11 @@ func CreateIndexes(db *gorm.DB) error {
 	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_dramas_title ON dramas(title)").Error; err != nil {
 		return fmt.Errorf("failed to create drama title index: %w", err)
 	}
-	
+
 	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_dramas_category ON dramas(category)").Error; err != nil {
 		return fmt.Errorf("failed to create drama category index: %w", err)
 	}
-	
+
 	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_dramas_status ON dramas(status)").Error; err != nil {
 		return fmt.Errorf("failed to create drama status index: %w", err)
 	}
@@ -55,7 +56,7 @@ func CreateIndexes(db *gorm.DB) error {
 	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_episodes_drama_id ON episodes(drama_id)").Error; err != nil {
 		return fmt.Errorf("failed to create episode drama_id index: %w", err)
 	}
-	
+
 	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_episodes_episode_number ON episodes(episode_number)").Error; err != nil {
 		return fmt.Errorf("failed to create episode number index: %w", err)
 	}
@@ -77,7 +78,7 @@ func SeedData(db *gorm.DB) error {
 			Username: "admin",
 			Email:    "admin@example.com",
 			Password: "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // password
-			IsActive: true,
+			Status:   "active",
 		}
 
 		if err := db.Create(defaultAdmin).Error; err != nil {
@@ -96,7 +97,7 @@ func SeedData(db *gorm.DB) error {
 		sampleDrama := &models.Drama{
 			Title:       "示例短剧",
 			Description: "这是一个示例短剧，用于测试系统功能",
-			Genre:       "爱情",
+			Category:    "爱情",
 			CoverImage:  "/static/images/sample-cover.jpg",
 			Status:      "active",
 			ViewCount:   0,

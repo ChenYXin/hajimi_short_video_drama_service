@@ -14,10 +14,10 @@ type AuthService interface {
 	// 用户认证
 	RegisterUser(req models.RegisterRequest) (*models.User, error)
 	LoginUser(req models.LoginRequest) (*models.LoginResponse, error)
-	
+
 	// 管理员认证
 	LoginAdmin(req models.AdminLoginRequest) (*models.LoginResponse, error)
-	
+
 	// Token 相关
 	RefreshToken(tokenString string) (string, error)
 	VerifyToken(tokenString string) (*utils.JWTClaims, error)
@@ -25,8 +25,8 @@ type AuthService interface {
 
 // authService 认证服务实现
 type authService struct {
-	userRepo  repository.UserRepository
-	adminRepo repository.AdminRepository
+	userRepo   repository.UserRepository
+	adminRepo  repository.AdminRepository
 	jwtManager *utils.JWTManager
 }
 
@@ -125,7 +125,7 @@ func (s *authService) LoginAdmin(req models.AdminLoginRequest) (*models.LoginRes
 	}
 
 	// 检查管理员是否激活
-	if !admin.IsActive {
+	if !admin.IsActive() {
 		return nil, errors.New("管理员账户已被禁用")
 	}
 

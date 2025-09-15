@@ -20,6 +20,7 @@ type AdminService interface {
 	DeleteEpisode(id uint) error
 	GetDramaList(page, pageSize int) (*models.PaginatedDramas, error)
 	GetEpisodeList(dramaID uint, page, pageSize int) (*models.PaginatedEpisodes, error)
+	GetAllEpisodeList(page, pageSize int) (*models.PaginatedEpisodes, error)
 	CreateAdmin(req models.CreateAdminRequest) (*models.Admin, error)
 	GetAdminList(page, pageSize int) (*models.PaginatedAdmins, error)
 }
@@ -59,7 +60,7 @@ func (s *adminService) Login(req models.AdminLoginRequest) (*models.LoginRespons
 	}
 
 	// 检查管理员是否激活
-	if !admin.IsActive {
+	if !admin.IsActive() {
 		return nil, errors.New("管理员账户已被禁用")
 	}
 
@@ -92,13 +93,13 @@ func (s *adminService) CreateDrama(req models.CreateDramaRequest) (*models.Drama
 		CoverImage:  req.CoverImage,
 		Director:    req.Director,
 		Actors:      req.Actors,
-		Genre:       req.Genre,
+		Category:    req.Category,
 		Status:      req.Status,
 	}
 
 	// 设置默认状态
 	if drama.Status == "" {
-		drama.Status = "active"
+		drama.Status = "draft"
 	}
 
 	err := s.dramaRepo.Create(drama)
@@ -139,8 +140,8 @@ func (s *adminService) UpdateDrama(id uint, req models.UpdateDramaRequest) (*mod
 	if req.Actors != "" {
 		drama.Actors = req.Actors
 	}
-	if req.Genre != "" {
-		drama.Genre = req.Genre
+	if req.Category != "" {
+		drama.Category = req.Category
 	}
 	if req.Status != "" {
 		drama.Status = req.Status
@@ -205,18 +206,18 @@ func (s *adminService) CreateEpisode(req models.CreateEpisodeRequest) (*models.E
 	}
 
 	episode := &models.Episode{
-		DramaID:     req.DramaID,
-		Title:       req.Title,
-		EpisodeNum:  req.EpisodeNum,
-		Duration:    req.Duration,
-		VideoURL:    req.VideoURL,
-		Thumbnail:   req.Thumbnail,
-		Status:      req.Status,
+		DramaID:    req.DramaID,
+		Title:      req.Title,
+		EpisodeNum: req.EpisodeNum,
+		Duration:   req.Duration,
+		VideoURL:   req.VideoURL,
+		Thumbnail:  req.Thumbnail,
+		Status:     req.Status,
 	}
 
 	// 设置默认状态
 	if episode.Status == "" {
-		episode.Status = "active"
+		episode.Status = "draft"
 	}
 
 	err = s.episodeRepo.Create(episode)
@@ -370,6 +371,34 @@ func (s *adminService) GetEpisodeList(dramaID uint, page, pageSize int) (*models
 	}, nil
 }
 
+// GetAllEpisodeList 获取所有剧集列表（管理员视图）
+func (s *adminService) GetAllEpisodeList(page, pageSize int) (*models.PaginatedEpisodes, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	offset := (page - 1) * pageSize
+	episodes, total, err := s.episodeRepo.GetList(offset, pageSize)
+	if err != nil {
+		return nil, fmt.Errorf("获取剧集列表失败: %w", err)
+	}
+
+	totalPages := (int(total) + pageSize - 1) / pageSize
+
+	return &models.PaginatedEpisodes{
+		Episodes:    episodes,
+		Total:       total,
+		Page:        page,
+		PageSize:    pageSize,
+		TotalPages:  totalPages,
+		HasNext:     page < totalPages,
+		HasPrevious: page > 1,
+	}, nil
+}
+
 // CreateAdmin 创建管理员
 func (s *adminService) CreateAdmin(req models.CreateAdminRequest) (*models.Admin, error) {
 	// 检查用户名是否已存在
@@ -401,7 +430,7 @@ func (s *adminService) CreateAdmin(req models.CreateAdminRequest) (*models.Admin
 		Email:    req.Email,
 		Password: hashedPassword,
 		Role:     req.Role,
-		IsActive: true,
+		Status:   "active",
 	}
 
 	// 设置默认角色

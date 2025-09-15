@@ -1,12 +1,9 @@
 package router
 
 import (
-	"html/template"
-
 	"gin-mysql-api/internal/handler"
 	"gin-mysql-api/internal/middleware"
 	"gin-mysql-api/internal/service"
-	templateFuncs "gin-mysql-api/internal/template"
 	"gin-mysql-api/pkg/utils"
 
 	"github.com/gin-gonic/gin"
@@ -69,6 +66,12 @@ func (r *Router) setupMiddleware() {
 		MaxAge:           86400,
 	}
 	r.engine.Use(middleware.CORS(corsConfig))
+
+	// 设置CSP头部，允许加载外部图片和视频
+	r.engine.Use(func(c *gin.Context) {
+		c.Header("Content-Security-Policy", "default-src 'self'; img-src 'self' data: https: http:; media-src 'self' https: http:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data: https:;")
+		c.Next()
+	})
 
 	// 请求大小限制中间件
 	r.engine.Use(middleware.RequestSizeLimit(10 * 1024 * 1024)) // 10MB
@@ -164,6 +167,7 @@ func (r *Router) setupRoutes() {
 			// 剧集管理
 			adminEpisodes := admin.Group("/episodes")
 			{
+				adminEpisodes.GET("", adminHandler.GetAllEpisodeList)
 				adminEpisodes.POST("", adminHandler.CreateEpisode)
 				adminEpisodes.PUT("/:id", adminHandler.UpdateEpisode)
 				adminEpisodes.DELETE("/:id", adminHandler.DeleteEpisode)
@@ -181,70 +185,69 @@ func (r *Router) setupRoutes() {
 
 	// 静态文件服务
 	r.engine.Static("/uploads", "./uploads")
-	r.engine.Static("/static", "./web/static")
 
-	// 设置 HTML 模板
-	tmpl := template.New("").Funcs(templateFuncs.GetFuncMap())
+	// Vue 前端静态文件服务
+	r.engine.Static("/assets", "./web/dist/assets")
+	r.engine.StaticFile("/favicon.ico", "./web/dist/favicon.ico")
 
-	// 手动加载所有模板文件
-	tmpl = template.Must(tmpl.ParseGlob("web/templates/auth/*.html"))
-	tmpl = template.Must(tmpl.ParseGlob("web/templates/admin/*.html"))
-	tmpl = template.Must(tmpl.ParseGlob("web/templates/layout/*.html"))
-
-	r.engine.SetHTMLTemplate(tmpl)
-
-	// Web 管理界面路由
-	r.setupWebRoutes()
+	// Vue SPA 路由支持
+	r.setupSPARoutes()
 }
 
-// setupWebRoutes 设置 Web 管理界面路由
-func (r *Router) setupWebRoutes() {
-	// 创建 Web 处理器
-	webHandler := handler.NewWebHandler(r.services.AdminService, r.services.UserService, r.services.DramaService)
-
-	// 管理员登录页面（无需认证）
-	r.engine.GET("/admin/login", webHandler.LoginPage)
-	r.engine.POST("/admin/login", webHandler.Login)
-	r.engine.GET("/admin/logout", webHandler.Logout)
-
-	// 管理员界面（需要认证）
-	admin := r.engine.Group("/admin")
-	admin.Use(r.webAuthMiddleware())
+// setupSPARoutes 设置 Vue SPA 路由
+func (r *Router) setupSPARoutes() {
+	// 管理员 API 路由
+	adminAPI := r.engine.Group("/admin/api")
 	{
-		admin.GET("/", func(c *gin.Context) {
-			c.Redirect(302, "/admin/dashboard")
-		})
-		admin.GET("/dashboard", webHandler.Dashboard)
-		admin.GET("/dramas", webHandler.DramasPage)
-		admin.GET("/episodes", webHandler.EpisodesPage)
-		admin.GET("/users", webHandler.UsersPage)
-	}
-}
+		// 认证路由
+		authHandler := handler.NewAuthHandler(r.services.AuthService)
+		auth := adminAPI.Group("/auth")
+		{
+			auth.POST("/login", authHandler.AdminLogin)
+			auth.POST("/logout", func(c *gin.Context) {
+				c.JSON(200, gin.H{"success": true, "message": "退出成功"})
+			})
 
-// webAuthMiddleware Web 认证中间件
-func (r *Router) webAuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// 从 cookie 获取 token
-		token, err := c.Cookie("admin_token")
-		if err != nil || token == "" {
-			c.Redirect(302, "/admin/login")
-			c.Abort()
+			// 需要认证的路由
+			authProtected := auth.Group("")
+			authProtected.Use(middleware.AuthMiddleware(r.jwtManager))
+			{
+				authProtected.GET("/me", func(c *gin.Context) {
+					userID := c.GetUint("user_id")
+					username := c.GetString("username")
+					role := c.GetString("role")
+
+					c.JSON(200, gin.H{
+						"success": true,
+						"data": gin.H{
+							"id":       userID,
+							"username": username,
+							"role":     role,
+						},
+					})
+				})
+			}
+		}
+
+		// 其他管理 API 路由可以在这里添加
+		// 例如：统计数据、用户管理、短剧管理等
+	}
+
+	// SPA 路由处理 - 所有未匹配的路由都返回 index.html
+	r.engine.NoRoute(func(c *gin.Context) {
+		path := c.Request.URL.Path
+
+		// 如果是 API 请求，返回 404
+		if len(path) >= 4 && path[:4] == "/api" {
+			c.JSON(404, gin.H{"error": "API endpoint not found"})
+			return
+		}
+		if len(path) >= 11 && path[:11] == "/admin/api" {
+			c.JSON(404, gin.H{"error": "Admin API endpoint not found"})
 			return
 		}
 
-		// 验证 token
-		claims, err := r.jwtManager.VerifyToken(token)
-		if err != nil || claims.Role != "admin" {
-			c.Redirect(302, "/admin/login")
-			c.Abort()
-			return
-		}
-
-		// 设置用户信息到上下文
-		c.Set("user_id", claims.UserID)
-		c.Set("username", claims.Username)
-		c.Set("role", claims.Role)
-
-		c.Next()
-	}
+		// 其他路由返回 Vue SPA 的 index.html
+		c.File("./web/dist/index.html")
+	})
 }
