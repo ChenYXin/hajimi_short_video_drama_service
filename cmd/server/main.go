@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"gin-mysql-api/internal/repository"
 	"gin-mysql-api/internal/router"
@@ -56,10 +55,10 @@ func main() {
 
 	// 初始化JWT管理器
 	jwtManager := utils.NewJWTManager(cfg.JWT.Secret, cfg.JWT.Expiration)
-	
+
 	// 初始化缓存服务
 	cacheService := service.NewCacheService(redisClient)
-	
+
 	// 初始化服务层
 	userService := service.NewUserService(userRepo, jwtManager)
 	adminService := service.NewAdminService(adminRepo, dramaRepo, episodeRepo, jwtManager, cacheService)
@@ -83,11 +82,6 @@ func main() {
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
 		Handler: r,
-	}
-
-	// 启动Prometheus监控服务器（如果启用）
-	if cfg.Prometheus.Enabled {
-		go startPrometheusServer(cfg)
 	}
 
 	// 启动服务器
@@ -131,27 +125,9 @@ func setupLogging(cfg *config.Config) {
 		if err := os.MkdirAll("logs", 0755); err != nil {
 			log.Printf("创建日志目录失败: %v", err)
 		}
-		
-		// 这里可以设置日志文件输出
-		log.Printf("日志配置: 级别=%s, 格式=%s, 输出=%s", 
-			cfg.Logging.Level, cfg.Logging.Format, cfg.Logging.Output)
-	}
-}
 
-// startPrometheusServer 启动Prometheus监控服务器
-func startPrometheusServer(cfg *config.Config) {
-	mux := http.NewServeMux()
-	mux.Handle(cfg.Prometheus.Path, promhttp.Handler())
-	
-	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.Prometheus.Port),
-		Handler: mux,
-	}
-	
-	log.Printf("Prometheus监控服务器启动在端口 %d, 路径 %s", 
-		cfg.Prometheus.Port, cfg.Prometheus.Path)
-	
-	if err := server.ListenAndServe(); err != nil {
-		log.Printf("Prometheus服务器启动失败: %v", err)
+		// 这里可以设置日志文件输出
+		log.Printf("日志配置: 级别=%s, 格式=%s, 输出=%s",
+			cfg.Logging.Level, cfg.Logging.Format, cfg.Logging.Output)
 	}
 }

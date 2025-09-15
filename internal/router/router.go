@@ -10,7 +10,6 @@ import (
 	"gin-mysql-api/pkg/utils"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Router 路由配置
@@ -23,7 +22,7 @@ type Router struct {
 // NewRouter 创建新的路由器
 func NewRouter(jwtManager *utils.JWTManager, services *service.Container) *Router {
 	engine := gin.New()
-	
+
 	return &Router{
 		engine:     engine,
 		jwtManager: jwtManager,
@@ -35,10 +34,10 @@ func NewRouter(jwtManager *utils.JWTManager, services *service.Container) *Route
 func (r *Router) Setup() *gin.Engine {
 	// 设置中间件
 	r.setupMiddleware()
-	
+
 	// 设置路由
 	r.setupRoutes()
-	
+
 	return r.engine
 }
 
@@ -46,22 +45,22 @@ func (r *Router) Setup() *gin.Engine {
 func (r *Router) setupMiddleware() {
 	// 错误处理中间件
 	r.engine.Use(middleware.ErrorHandler())
-	
+
 	// 请求 ID 中间件
 	r.engine.Use(middleware.RequestIDMiddleware())
-	
+
 	// 日志中间件
 	r.engine.Use(middleware.Logger())
-	
+
 	// 安全中间件
 	r.engine.Use(middleware.Security())
-	
+
 	// CORS 中间件
 	corsConfig := middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
-			"Origin", "Content-Type", "Content-Length", 
+			"Origin", "Content-Type", "Content-Length",
 			"Accept-Encoding", "X-CSRF-Token", "Authorization",
 			"X-Request-ID",
 		},
@@ -70,16 +69,13 @@ func (r *Router) setupMiddleware() {
 		MaxAge:           86400,
 	}
 	r.engine.Use(middleware.CORS(corsConfig))
-	
-	// Prometheus 指标中间件
-	r.engine.Use(middleware.PrometheusMetrics())
-	
+
 	// 请求大小限制中间件
 	r.engine.Use(middleware.RequestSizeLimit(10 * 1024 * 1024)) // 10MB
-	
+
 	// 简单限流中间件
 	r.engine.Use(middleware.SimpleRateLimit())
-	
+
 	// 404 和 405 处理
 	r.engine.NoRoute(middleware.NotFoundHandler())
 	r.engine.NoMethod(middleware.MethodNotAllowedHandler())
@@ -99,9 +95,6 @@ func (r *Router) setupRoutes() {
 	r.engine.GET("/health", healthHandler.HealthCheck)
 	r.engine.GET("/ready", healthHandler.ReadinessCheck)
 	r.engine.GET("/live", healthHandler.LivenessCheck)
-	
-	// Prometheus 指标端点
-	r.engine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// API 路由组
 	api := r.engine.Group("/api")
@@ -112,7 +105,7 @@ func (r *Router) setupRoutes() {
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/admin/login", authHandler.AdminLogin)
-			
+
 			// 需要认证的认证路由
 			authProtected := auth.Group("")
 			authProtected.Use(middleware.AuthMiddleware(r.jwtManager))
@@ -189,17 +182,17 @@ func (r *Router) setupRoutes() {
 	// 静态文件服务
 	r.engine.Static("/uploads", "./uploads")
 	r.engine.Static("/static", "./web/static")
-	
+
 	// 设置 HTML 模板
 	tmpl := template.New("").Funcs(templateFuncs.GetFuncMap())
-	
+
 	// 手动加载所有模板文件
 	tmpl = template.Must(tmpl.ParseGlob("web/templates/auth/*.html"))
 	tmpl = template.Must(tmpl.ParseGlob("web/templates/admin/*.html"))
 	tmpl = template.Must(tmpl.ParseGlob("web/templates/layout/*.html"))
-	
+
 	r.engine.SetHTMLTemplate(tmpl)
-	
+
 	// Web 管理界面路由
 	r.setupWebRoutes()
 }

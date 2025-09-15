@@ -49,10 +49,5 @@ func GetTestConfig() *config.Config {
 			Output:   "stdout",
 			Filename: "",
 		},
-		Prometheus: config.PrometheusConfig{
-			Enabled: false,
-			Path:    "/metrics",
-			Port:    9090,
-		},
 	}
 }

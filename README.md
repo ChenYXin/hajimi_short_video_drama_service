@@ -23,7 +23,6 @@
 - **Web 管理界面**: 响应式管理后台
 - **中间件支持**: 认证、日志、CORS、限流
 - **数据库优化**: 连接池、索引优化
-- **监控系统**: Prometheus + Grafana
 - **容器化部署**: Docker + Docker Compose
 - **测试覆盖**: 单元测试 + 集成测试
 
@@ -93,8 +92,6 @@ go run cmd/server/main.go
 - **管理后台**: http://localhost:1800/admin
 - **API 文档**: http://localhost:1800/swagger/index.html
 - **健康检查**: http://localhost:1800/health
-- **监控面板**: http://localhost:3000 (Grafana)
-- **指标数据**: http://localhost:9091 (Prometheus)
 
 ### 🔑 默认账号
 
@@ -243,8 +240,6 @@ go run cmd/server/main.go
 configs/
 ├── config.yaml          # 开发环境配置 (包含详细注释)
 ├── production.yaml      # 生产环境配置 (复制config.yaml修改)
-├── prometheus.yml       # Prometheus监控配置
-└── alert_rules.yml      # 告警规则配置
 ```
 
 ### 环境变量覆盖
@@ -265,14 +260,11 @@ export APP_JWT_SECRET=production-secret
 | `jwt.secret` | `APP_JWT_SECRET` | JWT 签名密钥 |
 | `redis.password` | `APP_REDIS_PASSWORD` | Redis 密码 |
 
-## 📊 监控和运维
 
 ### 服务地址
 - **应用程序**: http://localhost:1800
 - **管理后台**: http://localhost:1800/admin (admin/admin123)
 - **健康检查**: http://localhost:1800/health
-- **Prometheus**: http://localhost:9091
-- **Grafana**: http://localhost:3000 (admin/admin123)
 
 ### 常用命令
 ```bash
@@ -292,11 +284,6 @@ make backup-db
 make test
 ```
 
-### 监控指标
-- HTTP 请求数量和响应时间
-- 数据库连接池状态
-- Redis 连接状态
-- 业务指标（用户注册、短剧观看等）
 
 ## 🔒 安全特性
 
@@ -317,7 +304,6 @@ make test
 - 短剧内容管理
 - 文件上传管理
 - Web 管理界面
-- 监控告警系统
 - 容器化部署
 
 ### 待完善功能

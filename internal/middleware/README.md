@@ -85,22 +85,6 @@ rateLimitConfig := middleware.RateLimitConfig{
 router.Use(middleware.SimpleRateLimit(rateLimitConfig))
 ```
 
-### 5. 监控指标中间件 (`metrics.go`)
-
-集成 Prometheus 监控：
-
-- **PrometheusMetrics**: HTTP 请求指标收集
-- **BusinessMetrics**: 业务指标记录器
-
-```go
-// HTTP 指标
-router.Use(middleware.PrometheusMetrics())
-
-// 业务指标
-metrics := middleware.NewBusinessMetrics()
-metrics.RecordUserRegistration()
-metrics.RecordDramaView("123")
-```
 
 ### 6. 中间件管理器 (`manager.go`)
 
@@ -116,30 +100,6 @@ manager.SetupDevelopmentMiddlewares(router)
 manager.SetupProductionMiddlewares(router)
 ```
 
-## 监控指标
-
-### HTTP 指标
-
-- `http_requests_total`: HTTP 请求总数
-- `http_request_duration_seconds`: HTTP 请求持续时间
-- `http_request_size_bytes`: HTTP 请求大小
-- `http_response_size_bytes`: HTTP 响应大小
-- `http_active_connections`: 当前活跃连接数
-
-### 业务指标
-
-- `user_registrations_total`: 用户注册总数
-- `user_logins_total`: 用户登录总数
-- `drama_views_total`: 短剧观看总数
-- `episode_views_total`: 剧集观看总数
-- `file_uploads_total`: 文件上传总数
-
-### 系统指标
-
-- `database_connections`: 数据库连接数
-- `redis_connections`: Redis 连接数
-- `cache_hits_total`: 缓存命中数
-- `cache_misses_total`: 缓存未命中数
 
 ## 日志格式
 
@@ -244,11 +204,6 @@ manager.SetupProductionMiddlewares(router)
 - 限制请求/响应体的记录大小
 - 使用 JSON 格式便于日志分析
 
-### 2. 指标优化
-
-- 路径标准化减少指标维度
-- 跳过不重要的路径
-- 合理设置直方图桶
 
 ### 3. 中间件顺序
 
@@ -259,7 +214,6 @@ manager.SetupProductionMiddlewares(router)
 3. 日志记录
 4. 安全头
 5. CORS
-6. 监控指标
 7. 限流
 8. 请求大小限制
 9. 超时控制
@@ -300,7 +254,6 @@ security:
 1. **错误处理**: 始终使用统一的错误响应格式
 2. **日志记录**: 记录足够的信息用于调试，但避免记录敏感信息
 3. **安全防护**: 根据应用需求配置适当的安全策略
-4. **监控指标**: 监控关键业务指标和系统性能
 5. **限流策略**: 根据系统容量设置合理的限流参数
 6. **中间件顺序**: 按照性能和功能需求合理安排中间件顺序
 7. **环境区分**: 开发和生产环境使用不同的中间件配置

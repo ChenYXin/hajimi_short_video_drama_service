@@ -10,31 +10,24 @@ import (
 
 // Manager 中间件管理器
 type Manager struct {
-	config          *config.Config
-	businessMetrics *BusinessMetrics
+	config *config.Config
 }
 
 // NewManager 创建中间件管理器
 func NewManager(cfg *config.Config) *Manager {
 	return &Manager{
-		config:          cfg,
-		businessMetrics: NewBusinessMetrics(),
+		config: cfg,
 	}
-}
-
-// GetBusinessMetrics 获取业务指标记录器
-func (m *Manager) GetBusinessMetrics() *BusinessMetrics {
-	return m.businessMetrics
 }
 
 // SetupMiddlewares 设置所有中间件
 func (m *Manager) SetupMiddlewares(engine *gin.Engine) {
 	// 错误处理中间件（最先设置）
 	engine.Use(ErrorHandler())
-	
+
 	// 请求 ID 中间件
 	engine.Use(RequestIDMiddleware())
-	
+
 	// 日志中间件
 	if m.config.Logging.Level == "debug" {
 		// 开发环境使用详细日志
@@ -50,7 +43,7 @@ func (m *Manager) SetupMiddlewares(engine *gin.Engine) {
 			SkipPaths: []string{"/health", "/ready", "/live", "/metrics"},
 		}))
 	}
-	
+
 	// 安全中间件
 	securityConfig := SecurityConfig{
 		XSSProtection:         "1; mode=block",
@@ -62,7 +55,7 @@ func (m *Manager) SetupMiddlewares(engine *gin.Engine) {
 		ReferrerPolicy:        "strict-origin-when-cross-origin",
 	}
 	engine.Use(Security(securityConfig))
-	
+
 	// CORS 中间件
 	corsConfig := CORSConfig{
 		AllowOrigins: []string{"*"}, // 生产环境应该配置具体的域名
@@ -77,21 +70,14 @@ func (m *Manager) SetupMiddlewares(engine *gin.Engine) {
 		MaxAge:           86400, // 24 hours
 	}
 	engine.Use(CORS(corsConfig))
-	
-	// Prometheus 指标中间件
-	metricsConfig := MetricsConfig{
-		SkipPaths:     []string{"/metrics", "/health", "/ready", "/live"},
-		NormalizePath: true,
-	}
-	engine.Use(CustomPrometheusMetrics(metricsConfig))
-	
+
 	// 请求大小限制中间件
 	maxRequestSize := int64(10 * 1024 * 1024) // 10MB
 	if m.config.Upload.MaxSize > 0 {
 		maxRequestSize = int64(m.config.Upload.MaxSize) * 1024 * 1024
 	}
 	engine.Use(RequestSizeLimit(maxRequestSize))
-	
+
 	// 限流中间件
 	rateLimitConfig := RateLimitConfig{
 		MaxRequests: 1000, // 每分钟最多 1000 个请求
@@ -105,10 +91,10 @@ func (m *Manager) SetupMiddlewares(engine *gin.Engine) {
 		},
 	}
 	engine.Use(SimpleRateLimit(rateLimitConfig))
-	
+
 	// 请求超时中间件
 	engine.Use(Timeout(30 * time.Second))
-	
+
 	// 404 和 405 处理
 	engine.NoRoute(NotFoundHandler())
 	engine.NoMethod(MethodNotAllowedHandler())
@@ -118,20 +104,20 @@ func (m *Manager) SetupMiddlewares(engine *gin.Engine) {
 func (m *Manager) SetupProductionMiddlewares(engine *gin.Engine) {
 	// 基础中间件
 	m.SetupMiddlewares(engine)
-	
+
 	// 生产环境特有的中间件
-	
+
 	// IP 白名单（如果配置了）
 	if len(m.config.Server.AllowedIPs) > 0 {
 		engine.Use(IPWhitelist(m.config.Server.AllowedIPs))
 	}
-	
+
 	// User-Agent 过滤
 	blockedUserAgents := []string{
 		"bot", "crawler", "spider", "scraper",
 	}
 	engine.Use(UserAgentFilter(blockedUserAgents))
-	
+
 	// 更严格的限流
 	strictRateLimitConfig := RateLimitConfig{
 		MaxRequests: 100, // 每分钟最多 100 个请求
@@ -147,9 +133,9 @@ func (m *Manager) SetupProductionMiddlewares(engine *gin.Engine) {
 func (m *Manager) SetupDevelopmentMiddlewares(engine *gin.Engine) {
 	// 基础中间件
 	m.SetupMiddlewares(engine)
-	
+
 	// 开发环境特有的中间件
-	
+
 	// 更宽松的 CORS 配置
 	devCorsConfig := CORSConfig{
 		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:1800", "http://127.0.0.1:3000"},

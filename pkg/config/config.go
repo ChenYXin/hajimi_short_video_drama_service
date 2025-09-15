@@ -10,13 +10,12 @@ import (
 
 // Config 应用配置结构
 type Config struct {
-	Server     ServerConfig     `mapstructure:"server"`
-	Database   DatabaseConfig   `mapstructure:"database"`
-	Redis      RedisConfig      `mapstructure:"redis"`
-	JWT        JWTConfig        `mapstructure:"jwt"`
-	Upload     UploadConfig     `mapstructure:"upload"`
-	Logging    LoggingConfig    `mapstructure:"logging"`
-	Prometheus PrometheusConfig `mapstructure:"prometheus"`
+	Server   ServerConfig   `mapstructure:"server"`
+	Database DatabaseConfig `mapstructure:"database"`
+	Redis    RedisConfig    `mapstructure:"redis"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
+	Upload   UploadConfig   `mapstructure:"upload"`
+	Logging  LoggingConfig  `mapstructure:"logging"`
 }
 
 // ServerConfig 服务器配置
@@ -72,21 +71,14 @@ type LoggingConfig struct {
 	Filename string `mapstructure:"filename"`
 }
 
-// PrometheusConfig Prometheus配置
-type PrometheusConfig struct {
-	Enabled bool   `mapstructure:"enabled"`
-	Path    string `mapstructure:"path"`
-	Port    int    `mapstructure:"port"`
-}
-
 // LoadConfig 加载指定路径的配置文件
 func LoadConfig(configFile string) (*Config, error) {
 	viper.SetConfigFile(configFile)
-	
+
 	// 设置环境变量前缀
 	viper.SetEnvPrefix("APP")
 	viper.AutomaticEnv()
-	
+
 	// 设置环境变量键名替换
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
@@ -111,7 +103,7 @@ func LoadConfig(configFile string) (*Config, error) {
 func Load(configPath string) (*Config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	
+
 	if configPath != "" {
 		viper.AddConfigPath(configPath)
 	} else {
@@ -122,7 +114,7 @@ func Load(configPath string) (*Config, error) {
 	// 设置环境变量前缀
 	viper.SetEnvPrefix("APP")
 	viper.AutomaticEnv()
-	
+
 	// 设置环境变量键名替换
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 

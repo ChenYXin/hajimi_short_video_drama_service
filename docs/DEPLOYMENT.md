@@ -154,54 +154,9 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    location /metrics {
-        proxy_pass http://localhost:9090;
-        # 限制访问
-        allow 127.0.0.1;
-        deny all;
-    }
 }
 ```
 
-## 监控配置
-
-### Prometheus
-
-- **访问地址**: http://localhost:9091
-- **配置文件**: `configs/prometheus.yml`
-- **告警规则**: `configs/alert_rules.yml`
-
-### Grafana
-
-- **访问地址**: http://localhost:3000
-- **默认账号**: admin/admin123
-- **数据源**: Prometheus (http://prometheus:9090)
-
-### 监控指标
-
-#### 应用指标
-
-- HTTP 请求数量和响应时间
-- 数据库连接池状态
-- Redis 连接状态
-- 业务指标 (用户注册、短剧观看等)
-
-#### 系统指标
-
-- CPU 使用率
-- 内存使用率
-- 磁盘使用率
-- 网络流量
-
-### 告警配置
-
-主要告警规则：
-
-- HTTP 错误率 > 10%
-- 响应时间 > 1秒
-- 数据库连接使用率 > 80%
-- 应用程序宕机
-- 系统资源使用率过高
 
 ## 服务管理
 
@@ -364,18 +319,6 @@ docker-compose exec redis redis-cli ping
 docker-compose logs redis
 ```
 
-#### 4. 监控服务异常
-
-```bash
-# 检查 Prometheus
-curl http://localhost:9091/-/healthy
-
-# 检查 Grafana
-curl http://localhost:3000/api/health
-
-# 重启监控服务
-docker-compose restart prometheus grafana
-```
 
 ### 日志分析
 
@@ -397,8 +340,6 @@ docker-compose restart prometheus grafana
 # 查看系统资源使用
 docker stats
 
-# 查看应用性能指标
-curl http://localhost:9090/metrics
 
 # 数据库性能分析
 docker-compose exec mysql mysql -u root -p -e "SHOW PROCESSLIST;"
